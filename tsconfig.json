@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"lib": ["es2018"],
+		"target": "es2018",
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"preserveConstEnums": true,
+		"jsxFactory": "h",
+		"jsxFragmentFactory": "Fragment"
+	}
+}
