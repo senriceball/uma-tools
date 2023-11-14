@@ -3,8 +3,9 @@ import { useState } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 
 import { Language, LanguageSelect, defaultLanguage } from '../components/Language';
-import { SkillList } from '../components/SkillList';
+import { SkillList, SkillDetailsList } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
+import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 
 import skills from '../uma-skill-tools/data/skill_data.json';
 import skillnames from '../uma-skill-tools/data/skillnames.json';
@@ -12,9 +13,22 @@ import skillnames from '../uma-skill-tools/data/skillnames.json';
 import { Region, RegionList } from '../uma-skill-tools/Region';
 import { CourseData, CourseHelpers } from '../uma-skill-tools/CourseData';
 import { HorseParameters, Strategy, Aptitude } from '../uma-skill-tools/HorseTypes';
+import { getParser } from '../uma-skill-tools/ConditionParser';
 import { buildSkillData, conditionsWithActivateCountsAsRandom } from '../uma-skill-tools/RaceSolverBuilder';
 import { ImmediatePolicy } from '../uma-skill-tools/ActivationSamplePolicy';
 import { immediate, noopImmediate } from '../uma-skill-tools/ActivationConditions';
+
+import './app.css';
+
+const DefaultCourseId = 10506;
+
+const UI_ja = Object.freeze({
+	'addskill': '+ スキル追加'
+});
+
+const UI_en = Object.freeze({
+	'addskill': '+ Add Skill'
+});
 
 const horse = Object.freeze({
 	speed: 2000,
@@ -48,39 +62,85 @@ const conditions = Object.freeze(Object.assign({}, conditionsWithActivateCountsA
 	running_style: noopImmediate
 }));
 
-function regionsForSkill(course: CourseData, skillId: string) {
+const parser = getParser(conditions);
+
+function regionsForSkill(course: CourseData, skillId: string, color: {stroke: string, fill: string}) {
 	const wholeCourse = new RegionList();
 	wholeCourse.push(new Region(0, course.distance));
+	console.log(skillId);
 	try {
-    	const sd = buildSkillData(horse, course, wholeCourse, conditions, skillId);
-    	if (sd == null) return {type: RegionDisplayType.Immedate, regions: []};
-    	return {
-    		type: sd.samplePolicy == ImmediatePolicy ? RegionDisplayType.Immediate : RegionDisplayType.Regions,
-    		regions: sd.regions
-    	};
+		const sd = buildSkillData(horse, course, wholeCourse, parser, skillId, true);
+		console.log(sd);
+		if (sd == null) return {type: RegionDisplayType.Immedate, regions: [], color};
+		return {
+			type: sd.samplePolicy == ImmediatePolicy ? RegionDisplayType.Immediate : RegionDisplayType.Regions,
+			regions: sd.regions,
+			color
+		};
 	} catch (e) {
-	    return {type: RegionDisplayType.Immedate, regions: []};
+		console.log(e);
+		return {type: RegionDisplayType.Immedate, regions: [], color};
 	}
 }
 
-const DefaultCourseId = 10805;
+const colors = [
+	{stroke: 'rgb(205,11,11)', fill: 'rgba(247,115,115,0.3)'},
+	{stroke: 'rgb(28,61,106)', fill: 'rgba(47,103,177,0.3)'},
+	{stroke: 'rgb(114,76,132)', fill: 'rgba(182,153,196,0.3)'},
+	{stroke: 'rgb(36,106,99)', fill: 'rgba(61,177,166,0.3)'}
+];
 
 function App(props) {
 	const [language, setLanguage] = useState(defaultLanguage());
 	const [courseId, setCourseId] = useState(DefaultCourseId);
 	const [selectedSkills, setSelectedSkills] = useState(new Set());
+	const [skillsOpen, setSkillsOpen] = useState(false);
+	
+	function setSelectedSkillsAndClose(ids) {
+		setSelectedSkills(ids);
+		setSkillsOpen(false);
+	}
+	
+	function showSkillSelector(e) {
+		setSkillsOpen(true);
+	}
+	
+	function hideSkillSelector(e) {
+		setSkillsOpen(false);
+	}
+	
+	function removeSkill(e) {
+		const se = e.target.closest('.expandedSkill');
+		if (se == null) return;
+		e.stopPropagation();
+		const id = se.dataset.skillid;
+		const newSelected = new Set(selectedSkills);
+		newSelected.delete(id);
+		setSelectedSkills(newSelected);
+	}
 
-	const skilldefs = {skillnames: {}};
+	const strings = {skillnames: {}, tracknames: language == 'ja' ? TRACKNAMES_ja : TRACKNAMES_en, ui: language == 'ja' ? UI_ja : UI_en};
 	const langid = +(language == 'en');
-	Object.keys(skillnames).forEach(id => skilldefs.skillnames[id] = skillnames[id][langid]);
-	const course = CourseHelpers.getCourse(courseId);
+	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
+
+	const course = CourseHelpers.getCourse(courseId); 
+	
 	return (
 		<Language.Provider value={language}>
-			<IntlProvider definition={skilldefs}>
+			<IntlProvider definition={strings}>
+				<div id="overlay" class={skillsOpen ? "skillListWrapper-open" : ""} onClick={hideSkillSelector} />
 				<LanguageSelect language={language} setLanguage={setLanguage} />
-				<TrackSelect courseid={courseId} setCourseid={setCourseId} />
-				<RaceTrack courseid={courseId} width="800" height="220" regions={Array.from(selectedSkills).map(id => regionsForSkill(course, id))} />
-				<SkillList ids={Object.keys(skills)} selected={selectedSkills} setSelected={setSelectedSkills} />
+				<RaceTrack courseid={courseId} width="960" height="220" regions={Array.from(selectedSkills).map((id,i) => regionsForSkill(course, id, colors[i % colors.length]))} />
+				<div id="buttonsRow">
+					<TrackSelect courseid={courseId} setCourseid={setCourseId} />
+					<button id="addSkill" onClick={showSkillSelector}><Text id="ui.addskill" /></button>
+				</div>
+				<div id="skillDetailsWrapper" onClick={removeSkill}>
+					<SkillDetailsList ids={selectedSkills} colors={colors.map(c => c.stroke)} />
+				</div>
+				<div id="skillListWrapper" class={skillsOpen ? "skillListWrapper-open" : ""}>
+					<SkillList ids={Object.keys(skills)} selected={selectedSkills} setSelected={setSelectedSkillsAndClose} />
+				</div>
 			</IntlProvider>
 		</Language.Provider>
 	);

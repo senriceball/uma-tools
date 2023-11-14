@@ -17,7 +17,8 @@
 
 .racetrackName {
 	color: rgb(121,64,22);
-	font: 18px bold sans-serif;
+	font: 22px bold sans-serif;
+	margin-bottom: 0.3em;
 	text-align: center;
 	text-stroke: 1px rgb(121,64,22);
 	-webkit-text-stroke: 1px rgb(121,64,22);

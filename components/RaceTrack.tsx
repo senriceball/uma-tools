@@ -5,7 +5,8 @@ import { IntlProvider, Text } from 'preact-i18n';
 import { CourseData, CourseHelpers, Surface, Orientation } from '../uma-skill-tools/CourseData';
 import { Region, RegionList } from '../uma-skill-tools/Region';
 
-import { Language } from './Language';
+import { useLanguage } from './Language';
+import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 
 import courses from '../uma-skill-tools/data/course_data.json';
 import tracknames from '../uma-skill-tools/data/tracknames.json';
@@ -14,73 +15,66 @@ import './RaceTrack.css';
 
 export const enum RegionDisplayType { Immediate, Regions };
 
-const STRINGS_ja = (function () {
-	const strings = {
-		'racetrack': Object.freeze({
-			'none': '​',
-			'inner': ' （内）',
-			'outer': ' （外）',
-			'outin': ' （外→内）',
-			'left': '左',
-			'right': '右',
-			'turf': '芝',
-			'dirt': 'ダート',
-			'straight': '直線',
-			'corner': 'コーナー{{n}}',
-			'uphill': '上り坂',
-			'downhill': '下り坂',
-			'phase0': '序盤',
-			'phase1': '中盤',
-			'phase2': '終盤',
-			'phase3': 'ラストスパート',
-			'short': Object.freeze({
-				'straight': '直',
-				'corner': 'コ{{n}}',
-				'uphill': '上',
-				'downhill': '下'
-			})
-		}),
-		'tracknames': {},
-		'coursedesc': '{{distance}}m{{inout}} {{surface}}'
-	};
-	Object.keys(tracknames).forEach(k => strings.tracknames[k] = tracknames[k][0]);
-	Object.freeze(strings.tracknames);
-	return Object.freeze(strings);
-})();
+const STRINGS_ja = Object.freeze({
+	'racetrack': Object.freeze({
+		'none': '​',
+		'inner': ' （内）',
+		'outer': ' （外）',
+		'outin': ' （外→内）',
+		'left': '左',
+		'right': '右',
+		'turf': '芝',
+		'dirt': 'ダート',
+		'straight': '直線',
+		'corner': 'コーナー{{n}}',
+		'uphill': '上り坂',
+		'downhill': '下り坂',
+		'phase0': '序盤',
+		'phase1': '中盤',
+		'phase2': '終盤',
+		'phase3': 'ラストスパート',
+		'short': Object.freeze({
+			'straight': '直',
+			'corner': 'コ{{n}}',
+			'uphill': '上',
+			'downhill': '下'
+		})
+	}),
+	'tracknames': TRACKNAMES_ja,
+	'coursedesc': '{{surface}} {{distance}}m{{inout}}'
+});
 
-const STRINGS_en = (function () {
-	const strings = {
-		'racetrack': Object.freeze({
-			'none': '​',
-			'inner': ' (inner)',
-			'outer': ' (outer)',
-			'outin': ' (outer→inner)',
-			'left': '(counterclockwise)',
-			'right': '(clockwise)',
-			'turf': 'turf',
-			'dirt': 'dirt',
-			'straight': 'Straight →',
-			'corner': 'Corner ↷{{n}}',
-			'uphill': 'Uphill ↗',
-			'downhill': 'Downhill ↘',
-			'phase0': 'Opening leg',
-			'phase1': 'Middle leg',
-			'phase2': 'Final leg',
-			'phase3': 'Last spurt',
-			'short': Object.freeze({
-				'straight': '→',
-				'corner': '↷{{n}}',
-				'uphill': '↗',
-				'downhill': '↘'
-			})
-		}),
-		'tracknames': {},
-		'coursedesc': '{{distance}}m{{inout}} {{surface}}' 
-	};
-	Object.keys(tracknames).forEach(k => strings.tracknames[k] = tracknames[k][1]);
-	Object.freeze(strings.tracknames);
-	return Object.freeze(strings);
-})();
+const STRINGS_en = Object.freeze({
+	'racetrack': Object.freeze({
+		'none': '​',
+		'inner': ' (inner)',
+		'outer': ' (outer)',
+		'outin': ' (outer→inner)',
+		'left': '(counterclockwise)',
+		'right': '(clockwise)',
+		'turf': 'turf',
+		'dirt': 'dirt',
+		'straight': 'Straight →',
+		'corner': 'Corner ⮌{{n}}',
+		'uphill': 'Uphill ↗',
+		'downhill': 'Downhill ↘',
+		'phase0': 'Opening leg',
+		'phase1': 'Middle leg',
+		'phase2': 'Final leg',
+		'phase3': 'Last spurt',
+		'short': Object.freeze({
+			'straight': '→',
+			'corner': '⮌{{n}}',
+			'uphill': '↗',
+			'downhill': '↘'
+		})
+	}),
+	'tracknames': TRACKNAMES_en,
+	'coursedesc': Object.freeze({  // 1 = turf 2 = dirt
+		'one': '{{distance}}m{{inout}}',
+		'many': '{{surface}} {{distance}}m{{inout}}'
+	}) 
+});
 
 const inoutKey = Object.freeze(['', 'none', 'inner', 'outer', 'outin']);
 
@@ -98,7 +92,7 @@ const coursesByTrack = (function () {
 })();
 
 export function TrackSelect(props) {
-	const lang = useContext(Language);
+	const lang = useLanguage();
 	const [trackid, setTrackid] = useState(courses[props.courseid].raceTrackId);
 	const changeCourse = useCallback((e) => props.setCourseid(+e.target.value), [props.setCourseid]);
 	
@@ -117,7 +111,7 @@ export function TrackSelect(props) {
 				<select value={props.courseid} onChange={changeCourse}>
 					{coursesByTrack[trackid].map(cid =>
 						<option value={cid}>
-							<Text id="coursedesc" fields={{
+							<Text id="coursedesc" plural={courses[cid].surface} fields={{
 								'distance': courses[cid].distance,
 								'inout': <Text id={`racetrack.${inoutKey[courses[cid].course]}`} />,
 								'surface': <Text id={courses[cid].surface == Surface.Turf ? 'racetrack.turf' : 'racetrack.dirt'} />
@@ -173,12 +167,12 @@ function doMouseLeave(e) {
 }
 
 export function RaceTrack(props) {
-	const lang = useContext(Language);
+	const lang = useLanguage();
 	const course = CourseHelpers.getCourse(props.courseid);
 
 	const trackNameHeader = useMemo(() =>
 		<div class="racetrackName">
-			<Text id={`tracknames.${course.raceTrackId}`} />{' '}<Text id="coursedesc" fields={{
+			<Text id={`tracknames.${course.raceTrackId}`} />{' '}<Text id="coursedesc" plural={course.surface} fields={{
 				'distance': course.distance,
 				'inout': <Text id={`racetrack.${inoutKey[courses[props.courseid].course]}`} />,
 				'surface': <Text id={course.surface == Surface.Turf ? 'racetrack.turf' : 'racetrack.dirt'} />
@@ -328,12 +322,12 @@ export function RaceTrack(props) {
 					{props.regions && props.regions.map(desc => {
 						if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
 							const x = desc.regions[0].start / course.distance * 100;
-							return <line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke="rgb(205,11,11)" />;
+							return <line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={4 - Math.min(Math.floor(x),2)} />;
 						} else {
 							return (
 								<Fragment>
 									{desc.regions.map(r =>
-										<rect x={`${r.start / course.distance * 100}%`} y="0" width={`${(r.end - r.start) / course.distance * 100}%`} height="100%" fill="rgba(247,115,115,0.3)" stroke="rgb(205,11,11)" />
+										<rect x={`${r.start / course.distance * 100}%`} y="0" width={`${(r.end - r.start) / course.distance * 100}%`} height="100%" fill={desc.color.fill} stroke={desc.color.stroke} />
 									)}
 								</Fragment>
 							);

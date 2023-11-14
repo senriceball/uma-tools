@@ -1,3 +1,14 @@
+/* ../components/Language.css */
+.langSelect {
+  background: none;
+  border: 1px solid rgb(148, 150, 189);
+  border-radius: 8px;
+  padding: 0.7em;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
 /* ../components/SkillList.css */
 .filterButton {
   background: rgb(214, 207, 231);
@@ -43,9 +54,13 @@
   padding: 0.2em;
   width: 18em;
 }
-.skill.selected {
+.skill:active {
   box-shadow: none;
   filter: brightness(0.95);
+}
+.hidden,
+.skill.selected {
+  display: none;
 }
 .skillName {
   color: rgb(121, 64, 22);
@@ -77,6 +92,101 @@
 .skill-unique {
   background: linear-gradient(90deg, rgb(239, 255, 214), rgb(161, 201, 248), rgb(170, 170, 255), rgb(255, 186, 231)) padding-box, linear-gradient(90deg, rgb(197, 255, 190), rgb(189, 235, 255), rgb(195, 208, 255), rgb(255, 138, 222)) border-box;
 }
+.skillDetailsList {
+  font-size: 16px;
+  list-style-type: none;
+}
+.skillDetailsList > li {
+  display: inline-block;
+  vertical-align: top;
+}
+.expandedSkill {
+  border-radius: 8px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  margin: 10px;
+  overflow: hidden;
+  padding: 0.4em;
+  width: 18em;
+}
+.expandedSkillColorMarker {
+  height: 5px;
+  margin-left: 0.7em;
+  width: 17.8em;
+}
+.skillDetails {
+  border-style: solid;
+  border-width: 2px 0 0 0;
+  color: rgb(121, 64, 22);
+  margin-top: 4px;
+  padding: 6px 0 2px 0;
+}
+.skillDetailsSection {
+  border-style: solid;
+  border-width: 1px 0 0 0;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+.skillDetailsSection:first-child {
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+}
+.skill-white .skillDetails,
+.skill-white .skillDetailsSection {
+  border-image: linear-gradient(rgb(172, 172, 182), rgb(169, 169, 181)) 90;
+}
+.skill-gold .skillDetails,
+.skill-gold .skillDetailsSection {
+  border-image: linear-gradient(rgb(203, 172, 89), rgb(230, 161, 58)) 90;
+}
+.skill-pink .skillDetails,
+.skill-pink .skillDetailsSection {
+  border-image: linear-gradient(rgb(230, 173, 202), rgb(228, 43, 161)) 90;
+}
+.skill-unique .skillDetails,
+.skill-unique .skillDetailsSection {
+  border-image: linear-gradient(rgb(121, 64, 22), rgb(121, 64, 22)) 90;
+}
+.skillConditions {
+  font-family: monospace;
+  margin: 0 0 0.5em 0.5em;
+}
+.condition {
+  margin-left: 0.7em;
+}
+.conditionOp {
+  margin: 0 2px;
+}
+.conditionOp {
+  opacity: 0.6;
+}
+.operatorAnd {
+  float: left;
+}
+.operatorOrText {
+  font-style: italic;
+  margin-left: 10px;
+  opacity: 0.8;
+}
+.skillEffects {
+  display: table;
+  margin-left: 0.5em;
+}
+.skillEffect {
+  display: table-row;
+}
+.skillEffectType {
+  display: table-cell;
+}
+.skillEffectValue {
+  display: table-cell;
+  padding-left: 1em;
+}
+.skillDuration {
+  display: inline-block;
+  margin-top: 0.5em;
+}
 
 /* ../components/RaceTrack.css */
 .distanceMarker {
@@ -96,7 +206,8 @@
 }
 .racetrackName {
   color: rgb(121, 64, 22);
-  font: 18px bold sans-serif;
+  font: 22px bold sans-serif;
+  margin-bottom: 0.3em;
   text-align: center;
   text-stroke: 1px rgb(121, 64, 22);
   -webkit-text-stroke: 1px rgb(121, 64, 22);
@@ -112,4 +223,69 @@
   paint-order: stroke;
   stroke: white;
   stroke-width: 2px;
+}
+
+/* app.css */
+.racetrackWrapper {
+  margin: auto;
+}
+#skillDetailsWrapper {
+  margin-top: 1em;
+}
+.skillDetailsList {
+  margin: auto;
+  width: 85%;
+}
+#buttonsRow {
+  margin: auto;
+  position: relative;
+  width: 960px;
+}
+.trackSelect > select {
+  background: none;
+  border: 1px solid rgb(148, 150, 189);
+  border-radius: 0 8px 8px 0;
+  padding: 0.7em;
+}
+.trackSelect > select:first-child {
+  border-radius: 8px 0 0 8px;
+  border-right: none;
+}
+#addSkill {
+  background: none;
+  border: 1px solid rgb(148, 150, 189);
+  border-radius: 8px;
+  padding: 0.7em;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+#skillListWrapper {
+  background: white;
+  bottom: 0;
+  display: none;
+  left: 10%;
+  margin: auto;
+  overflow-y: auto;
+  padding: 1em;
+  position: fixed;
+  top: 2em;
+  width: 80%;
+  z-index: 20;
+}
+#skillListWrapper.skillListWrapper-open {
+  display: block;
+}
+#overlay {
+  background: rgba(25, 25, 25, 0.6);
+  display: none;
+  height: 100%;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+}
+#overlay.skillListWrapper-open {
+  display: block;
 }

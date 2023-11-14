@@ -1,68 +1,146 @@
 import { h, Fragment, cloneElement } from 'preact';
-import { useState, useContext } from 'preact/hooks';
-import { IntlProvider, Text } from 'preact-i18n';
+import { useState, useContext, useRef } from 'preact/hooks';
+import { IntlProvider, Text, Localizer } from 'preact-i18n';
 
-import * as Parser from '../uma-skill-tools/ConditionParser';
+import { getParser } from '../uma-skill-tools/ConditionParser';
 import * as Matcher from '../uma-skill-tools/tools/ConditionMatcher';
 import { SkillRarity } from '../uma-skill-tools/RaceSolver.ts';
 
-import { Language } from './Language';
+import { useLanguage } from './Language';
 
 import './SkillList.css';
 
 import skills from '../uma-skill-tools/data/skill_data.json';
 import skillmeta from '../skill_meta.json';
 
-const STRINGS_ja = Object.freeze({'skillfilters': Object.freeze({
-	'white': '白スキル',
-	'gold': '金スキル',
-	'pink': '進化スキル',
-	'unique': '固有スキル',
-	'inherit': '継承した固有スキル',
-	'nige': '逃げ',
-	'senkou': '先行',
-	'sasi': '差し',
-	'oikomi': '追込',
-	'short': '短距離',
-	'mile': 'マイル',
-	'medium': '中距離',
-	'long': '長距離',
-	'turf': '芝',
-	'dirt': 'ダート',
-	'phase0': '序盤',
-	'phase1': '中盤',
-	'phase2': '終盤',
-	'phase3': 'ラストスパート',
-	'finalcorner': '最終コーナー',
-	'finalstraight': '最終直線'
-})});
+const Parser = getParser(Matcher.mockConditions);
 
-const STRINGS_en = Object.freeze({'skillfilters': Object.freeze({
-	'white': 'White skills',
-	'gold': 'Gold skills',
-	'pink': 'Evolved skills',
-	'unique': 'Unique skills',
-	'inherit': 'Inherited uniques',
-	'nige': 'Runner',
-	'senkou': 'Leader',
-	'sasi': 'Betweener',
-	'oikomi': 'Chaser',
-	'short': 'Short',
-	'mile': 'Mile',
-	'medium': 'Medium',
-	'long': 'Long',
-	'turf': 'Turf',
-	'dirt': 'Dirt',
-	'phase0': 'Opening leg',
-	'phase1': 'Middle leg',
-	'phase2': 'Final leg',
-	'phase3': 'Last spurt',
-	'finalcorner': 'Final corner',
-	'finalstraight': 'Final straight'
-})});
+const STRINGS_ja = Object.freeze({
+	'skillfilters': Object.freeze({
+		'white': '白スキル',
+		'gold': '金スキル',
+		'pink': '進化スキル',
+		'unique': '固有スキル',
+		'inherit': '継承した固有スキル',
+		'nige': '逃げ',
+		'senkou': '先行',
+		'sasi': '差し',
+		'oikomi': '追込',
+		'short': '短距離',
+		'mile': 'マイル',
+		'medium': '中距離',
+		'long': '長距離',
+		'turf': '芝',
+		'dirt': 'ダート',
+		'phase0': '序盤',
+		'phase1': '中盤',
+		'phase2': '終盤',
+		'phase3': 'ラストスパート',
+		'finalcorner': '最終コーナー',
+		'finalstraight': '最終直線'
+	}),
+	'skilleffecttypes': Object.freeze({
+		'1': 'スピードアップ',
+		'2': 'スタミナアップ',
+		'3': 'パワーアップ',
+		'4': '根性アップ',
+		'5': '賢さアップ',
+		'9': '体力回復',
+		'21': '現在速度（減速なし）',
+		'22': '現在速度',
+		'27': '目標速度',
+		'28': 'レーン移動速度',
+		'31': '加速',
+		'37': 'Activate random gold skill'
+	}),
+	'skilldetails': Object.freeze({
+		'accel': '{{n}}m/s²',
+		'basinn': '{{n}}バ身',
+		'conditions': '発動条件',
+		'distance_type': Object.freeze(['', '短距離', 'マイル', '中距離', '長距離']),
+		'duration': '基準持続時間',
+		'effects': '効果',
+		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'デビュー', 999: '毎日'}),
+		'ground_condition': Object.freeze(['', '良', '稍重', '重', '不良']),
+		'ground_type': Object.freeze(['', '芝', 'ダート']),
+		'meters': '{{n}}m',
+		'motivation': Object.freeze(['', '絶不調', '不調', '普通', '好調', '絶好調']),
+		'order_rate': 'チャンミ：{{cm}}、リグヒ：{{loh}}',
+		'preconditions': '前提条件',
+		'rotation': Object.freeze(['', '右回り', '左回り']),
+		'running_style': Object.freeze(['', '逃げ', '先行', '差し', '追込']),
+		'season': Object.freeze(['', '早春', '夏', '秋', '冬', '春']),
+		'seconds': '{{n}}s',
+		'speed': '{{n}}m/s',
+		'time': Object.freeze(['', '朝', '昼', '夕方', '夜']),
+		'weather': Object.freeze(['', '晴れ', '曇り', '雨', '雪'])
+	})
+});
+
+const STRINGS_en = Object.freeze({
+	'skillfilters': Object.freeze({
+		'white': 'White skills',
+		'gold': 'Gold skills',
+		'pink': 'Evolved skills',
+		'unique': 'Unique skills',
+		'inherit': 'Inherited uniques',
+		'nige': 'Runner',
+		'senkou': 'Leader',
+		'sasi': 'Betweener',
+		'oikomi': 'Chaser',
+		'short': 'Short',
+		'mile': 'Mile',
+		'medium': 'Medium',
+		'long': 'Long',
+		'turf': 'Turf',
+		'dirt': 'Dirt',
+		'phase0': 'Opening leg',
+		'phase1': 'Middle leg',
+		'phase2': 'Final leg',
+		'phase3': 'Last spurt',
+		'finalcorner': 'Final corner',
+		'finalstraight': 'Final straight'
+	}),
+	'skilleffecttypes': Object.freeze({
+		'1': 'Speed up',
+		'2': 'Stamina up',
+		'3': 'Power up',
+		'4': 'Guts up',
+		'5': 'Wisdom up',
+		'9': 'Recovery',
+		'21': 'Current speed',
+		'22': 'Current speed with natural deceleration',
+		'27': 'Target speed',
+		'28': 'Lane movement speed',
+		'31': 'Acceleration',
+		'37': 'Activate random gold skill'
+	}),
+	'skilldetails': Object.freeze({
+		'accel': '{{n}}m/s²',
+		'basinn': '{{n}} bashin',
+		'conditions': 'Conditions:',
+		'distance_type': Object.freeze(['', 'Short', 'Mile', 'Medium', 'Long']),
+		'duration': 'Base duration:',
+		'effects': 'Effects:',
+		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'Debut', 999: 'Daily races'}),
+		'ground_condition': Object.freeze(['', 'Good', 'Yielding', 'Soft', 'Heavy']),
+		'ground_type': Object.freeze(['', 'Turf', 'Dirt']),
+		'meters': '{{n}}m',
+		'motivation': Object.freeze(['', 'Terrible', 'Bad', 'Normal', 'Good', 'Perfect']),
+		'order_rate': 'CM: {{cm}}, LOH: {{loh}}',
+		'preconditions': 'Preconditions:',
+		'rotation': Object.freeze(['', 'Right', 'Left']),
+		'running_style': Object.freeze(['', 'Runner', 'Leader', 'Betweener', 'Chaser']),
+		'season': Object.freeze(['', 'Early spring', 'Summer', 'Autumn', 'Winter', 'Late spring']),
+		'seconds': '{{n}}s',
+		'speed': '{{n}}m/s',
+		'time': Object.freeze(['', 'Morning', 'Mid day', 'Evening', 'Night']),
+		'weather': Object.freeze(['', 'Sunny', 'Cloudy', 'Rainy', 'Snowy'])
+	})
+});
 
 function C(s: string) {
-	return Parser.parseAny(Parser.tokenize(s), {conditions: Matcher.mockConditions});
+	return Parser.parseAny(Parser.tokenize(s));
 }
 
 const filterOps = Object.freeze({
@@ -86,14 +164,14 @@ const filterOps = Object.freeze({
 
 const parsedConditions = {};
 Object.keys(skills).forEach(id => {
-	parsedConditions[id] = skills[id].alternatives.map(ef => Parser.parse(Parser.tokenize(ef.condition), {conditions: Matcher.mockConditions}));
+	parsedConditions[id] = skills[id].alternatives.map(ef => Parser.parse(Parser.tokenize(ef.condition)));
 });
 
 function matchRarity(id, testRarity) {
 	const r = skills[id].rarity;
 	switch (testRarity) {
 	case 'white':
-		return r == SkillRarity.White;
+		return r == SkillRarity.White && id[0] != '9';
 	case 'gold':
 		return r == SkillRarity.Gold;
 	case 'pink':
@@ -111,10 +189,223 @@ const classnames = Object.freeze(['', 'skill-white', 'skill-gold', 'skill-unique
 
 export function Skill(props) {
 	return (
-		<div class={`skill ${classnames[skills[props.id].rarity]} ${props.selected ? 'selected' : ''}`}>
-			<img class="skillIcon" src={`/uma-tools/icons/${skillmeta[props.id].iconId}.png`} />
+		<div class={`skill ${classnames[skills[props.id].rarity]} ${props.selected ? 'selected' : ''}`} data-skillid={props.id}>
+			<img class="skillIcon" src={`/uma-tools/icons/${skillmeta[props.id].iconId}.png`} /> 
 			<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
 		</div>
+	);
+}
+
+interface ConditionFormatter {
+	name: string
+	formatArg(arg: number): any
+}
+
+function fmtSeconds(arg: number) {
+	return <Text id="skilldetails.seconds" plural={arg} fields={{n: arg}} />;
+}
+
+function fmtPercent(arg: number) {
+	return `${arg}%`;
+}
+
+function fmtMeters(arg: number) {
+	return <Text id="skilldetails.meters" plural={arg} fields={{n: arg}} />;
+}
+
+function fmtString(strId: string) {
+	return function (arg: number) {
+		return <abbr title={arg}><Text id={`skilldetails.${strId}.${arg}`} /></abbr>;
+	};
+}
+
+const conditionFormatters = new Proxy({
+	accumulatetime: fmtSeconds,
+	bashin_diff_behind(arg: number) {
+		return <Localizer><abbr title={<Text id="skilldetails.meters" plural={arg * 2.5} fields={{n: arg * 2.5}} />}><Text id="skilldetails.basinn" plural={arg} fields={{n: arg}} /></abbr></Localizer>;
+	},
+	bashin_diff_infront(arg: number) {
+		return <Localizer><abbr title={<Text id="skilldetails.meters" plural={arg * 2.5} fields={{n: arg * 2.5}} />}><Text id="skilldetails.basinn" plural={arg} fields={{n: arg}} /></abbr></Localizer>;
+	},
+	behind_near_lane_time: fmtSeconds,
+	behind_near_lane_time_set1: fmtSeconds,
+	blocked_all_continuetime: fmtSeconds,
+	blocked_front_continuetime: fmtSeconds,
+	blocked_side_continuetime: fmtSeconds,
+	course_distance: fmtMeters,
+	distance_diff_rate: fmtPercent,
+	distance_diff_top(arg: number) {
+		return <Localizer><abbr title={<Text id="skilldetails.basinn" plural={arg / 2.5} fields={{n: arg / 2.5}} />}><Text id="skilldetails.meters" plural={arg} fields={{n: arg}} /></abbr></Localizer>;
+	},
+	distance_diff_top_float(arg: number) {
+		return <Localizer><abbr title={<Text id="skilldetails.basinn" plural={arg / 25} fields={{n: arg / 25}} />}><Text id="skilldetails.meters" plural={arg} fields={{n: (arg / 10).toFixed(1)}} /></abbr></Localizer>;
+	},
+	distance_rate: fmtPercent,
+	distance_rate_after_random: fmtPercent,
+	distance_type: fmtString('distance_type'),
+	grade: fmtString('grade'),
+	ground_condition: fmtString('ground_condition'),
+	ground_type: fmtString('ground_type'),
+	hp_per: fmtPercent,
+	infront_near_lane_time: fmtSeconds,
+	motivation: fmtString('motivation'),
+	order_rate(arg: number) {
+		return <Localizer><abbr title={<Text id="skilldetails.order_rate" fields={{cm: Math.round(arg / 100 * 9), loh: Math.round(arg / 100 * 12)}} />}>{arg}</abbr></Localizer>;
+	},
+	overtake_target_no_order_up_time: fmtSeconds,
+	overtake_target_time: fmtSeconds,
+	random_lot: fmtPercent,
+	remain_distance: fmtMeters,
+	rotation: fmtString('rotation'),
+	running_style: fmtString('running_style'),
+	season: fmtString('season'),
+	time: fmtString('time'),
+	track_id(arg: number) {
+		return <abbr title={arg}><Text id={`tracknames.${arg}`} /></abbr>;
+	},
+	weather: fmtString('weather')
+}, {
+	get(o: object, prop: string) {
+		if (o.hasOwnProperty(prop)) {
+			return {name: prop, formatArg: o[prop]};
+		}
+		return {
+			name: prop,
+			formatArg(arg: number) {
+				return arg.toString();
+			}
+		}; 
+	}
+});
+
+interface OpFormatter {
+	format(): any
+}
+
+class AndFormatter {
+	constructor(readonly left: OpFormatter, readonly right: OpFormatter) {}
+	
+	format() {
+		return (
+			<Fragment>
+				{this.left.format()}
+				<span class="operatorAnd">&amp;</span>
+				{this.right.format()}
+			</Fragment>
+		);
+	}
+}
+
+class OrFormatter {
+	constructor(readonly left: OpFormatter, readonly right: OpFormatter) {}
+	
+	format() {
+		return (
+			<Fragment>
+				{this.left.format()}
+				<span class="operatorOr">@<span class="operatorOrText">or</span></span>
+				{this.right.format()}
+			</Fragment>
+		);
+	}
+}
+
+function CmpFormatter(op: string) {
+	return class {
+		constructor(readonly cond: ConditionFormatter, readonly arg: number) {}
+		
+		format() {
+			return (
+				<div class="condition">
+					<span class="conditionName">{this.cond.name}</span><span class="conditionOp">{op}</span><span class="conditionArg">{this.cond.formatArg(this.arg)}</span>
+				</div>
+			);
+		}
+	};
+}
+
+const FormatParser = getParser<ConditionFormatter,OpFormatter>(conditionFormatters, {
+	and: AndFormatter,
+	or: OrFormatter,
+	eq: CmpFormatter('=='),
+	neq: CmpFormatter('!='),
+	lt: CmpFormatter('<'),
+	lte: CmpFormatter('<='),
+	gt: CmpFormatter('<'),
+	gte: CmpFormatter('>=')
+});
+
+function forceSign(n: number) {
+	return n <= 0 ? n.toString() : '+' + n;
+}
+
+const formatStat = forceSign;
+
+function formatSpeed(n: number) {
+	return <Text id="skilldetails.speed" plural={n} fields={{n: forceSign(n)}} />;
+}
+
+const formatEffect = Object.freeze({
+	1: formatStat,
+	2: formatStat,
+	3: formatStat,
+	4: formatStat,
+	5: formatStat,
+	9: n => `${(n * 100).toFixed(1)}%`,
+	21: formatSpeed, 
+	22: formatSpeed,
+	27: formatSpeed,
+	31: n => <Text id="skilldetails.accel" plural={n} fields={{n: forceSign(n)}} />
+});
+
+export function ExpandedSkillDetails(props) {
+	const skill = skills[props.id];
+	return (
+		<Fragment>
+			{props.color && <div class="expandedSkillColorMarker" style={`background:${props.color}`} />}
+			<div class={`expandedSkill ${classnames[skill.rarity]}`} data-skillid={props.id}>
+				<img class="skillIcon" src={`/uma-tools/icons/${skillmeta[props.id].iconId}.png`} /> 
+				<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
+				<div class="skillDetails">
+					{skills[props.id].alternatives.map(alt =>
+						<div class="skillDetailsSection">
+							{alt.precondition.length > 0 && <Fragment>
+								<Text id="skilldetails.preconditions" />
+								<div class="skillConditions">
+									{FormatParser.parse(FormatParser.tokenize(alt.precondition)).format()}
+								</div>
+							</Fragment>}
+							<Text id="skilldetails.conditions" />
+							<div class="skillConditions">
+								{FormatParser.parse(FormatParser.tokenize(alt.condition)).format()}
+							</div>
+							<Text id="skilldetails.effects" />
+							<div class="skillEffects">
+								{alt.effects.map(ef =>
+									<div class="skillEffect">
+										<span class="skillEffectType"><Text id={`skilleffecttypes.${ef.type}`}>{ef.type}</Text></span>
+										<span class="skillEffectValue">{ef.type in formatEffect ? formatEffect[ef.type](ef.modifier / 10000) : ef.modifier / 10000}</span>
+									</div>
+								)}
+							</div>
+							{alt.baseDuration > 0 && <span class="skillDuration"><Text id="skilldetails.duration" />{' '}<Text id="skilldetails.seconds" fields={{n: alt.baseDuration / 10000}} /></span>}
+						</div>
+					)}
+				</div>
+			</div>
+		</Fragment>
+	);
+}
+
+export function SkillDetailsList(props) {
+	const lang = useLanguage();
+
+	return (
+		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
+			<ul class="skillDetailsList">
+				{Array.from(props.ids).map((id,i) => <li><ExpandedSkillDetails id={id} color={props.colors ? props.colors[i % props.colors.length] : null} /></li>)}
+			</ul>
+		</IntlProvider>
 	);
 }
 
@@ -149,9 +440,8 @@ const groups_filters = Object.freeze({
 });
 
 export function SkillList(props) {
-	const lang = useContext(Language);
-	const [ids, setIds] = useState(props.ids);
-	const [selectedSet, setSelectedSet] = useState(() => new Map(Array.from(props.selected).map(id => [skillmeta[id].groupId, id])));
+	const lang = useLanguage();
+	const [visible, setVisible] = useState(() => new Set(props.ids));
 	const active = {}, setActive = {};
 	Object.keys(groups_filters).forEach(group => {
 		active[group] = {};
@@ -162,22 +452,22 @@ export function SkillList(props) {
 			setActive[group][filter] = setActive_;
 		});
 	});
+	
+	const selectedMap = new Map(Array.from(props.selected).map(id => [skillmeta[id].groupId, id]));
 
 	function toggleSelected(e) {
-		const se = e.target.closest('div');
-		if (!se.classList.contains('skill')) return;
+		const se = e.target.closest('div.skill');
+		if (se == null) return;
 		e.stopPropagation();
-		const id = se.parentElement.dataset.skillid;
+		const id = se.dataset.skillid;
 		const groupId = skillmeta[id].groupId;
-		const selected = selectedSet.get(groupId) == id;
-		const newSelected = new Map(selectedSet.entries());
-		if (selected) {
-			newSelected.delete(groupId);
-		} else {
-			newSelected.set(groupId, id);
+		const old = selectedMap.get(groupId) == id;
+		const newSelected = new Set(selectedMap.values());
+		if (selectedMap.has(groupId)) {
+			newSelected.delete(selectedMap.get(groupId));
 		}
-		setSelectedSet(newSelected);
-		props.setSelected(new Set(newSelected.values()));
+		newSelected.add(id);
+		props.setSelected(newSelected);
 	}
 
 	function updateFilters(e) {
@@ -198,14 +488,20 @@ export function SkillList(props) {
 			setActive[group][filter](active[group][filter]);
 			Object.keys(active[group]).forEach(k => setActive[group][k](active[group][k] = !active[group][k] && k == filter))
 		}
-		setIds(props.ids.filter(id => Object.keys(groups_filters).every(group => {
+		const filtered = new Set();
+		props.ids.forEach(id => {
+			const pass = Object.keys(groups_filters).every(group => {
 				const check = groups_filters[group].filter(f => active[group][f]);
 				if (check.length == 0) return true;
 				if (group == 'rarity') return check.some(f => matchRarity(id, f));
 				else if (group == 'icontype') return check.some(f => iconIdPrefixes[f].some(p => skillmeta[id].iconId.startsWith(p)));
 				return check.some(f => filterOps[f].some(op => parsedConditions[id].some(alt => Matcher.treeMatch(op, alt))));
-			})
-		));
+			});
+			if (pass) {
+				filtered.add(id);
+			}
+		});
+		setVisible(filtered);
 	}
 
 	function FilterGroup(props) {
@@ -220,7 +516,7 @@ export function SkillList(props) {
 		return <button data-filter={props.type} class={`iconFilterButton ${active[props.group][props.type] ? 'active': ''}`} style={`background-image:url(/uma-tools/icons/${props.type}1.png)`}></button>
 	}
 
-	const items = ids.map(id => <li key={id} data-skillid={id}><Skill id={id} selected={selectedSet.get(skillmeta[id].groupId) == id} /></li>);
+	const items = props.ids.map(id => <li key={id} class={visible.has(id) ? '' : 'hidden'}><Skill id={id} selected={selectedMap.get(skillmeta[id].groupId) == id} /></li>);
 
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
