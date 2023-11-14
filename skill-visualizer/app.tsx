@@ -136,7 +136,7 @@ function App(props) {
 					<button id="addSkill" onClick={showSkillSelector}><Text id="ui.addskill" /></button>
 				</div>
 				<div id="skillDetailsWrapper" onClick={removeSkill}>
-					<SkillDetailsList ids={selectedSkills} colors={colors.map(c => c.stroke)} />
+					<SkillDetailsList ids={selectedSkills} colors={colors.map(c => c.stroke)} distanceFactor={course.distance} />
 				</div>
 				<div id="skillListWrapper" class={skillsOpen ? "skillListWrapper-open" : ""}>
 					<SkillList ids={Object.keys(skills)} selected={selectedSkills} setSelected={setSelectedSkillsAndClose} />

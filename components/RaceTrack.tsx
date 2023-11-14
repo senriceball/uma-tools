@@ -41,7 +41,7 @@ const STRINGS_ja = Object.freeze({
 		})
 	}),
 	'tracknames': TRACKNAMES_ja,
-	'coursedesc': '{{surface}} {{distance}}m{{inout}}'
+	'coursedesc': '{{surface}}{{distance}}m{{inout}}'
 });
 
 const STRINGS_en = Object.freeze({
@@ -52,8 +52,8 @@ const STRINGS_en = Object.freeze({
 		'outin': ' (outer→inner)',
 		'left': '(counterclockwise)',
 		'right': '(clockwise)',
-		'turf': 'turf',
-		'dirt': 'dirt',
+		'turf': 'Turf',
+		'dirt': 'Dirt',
 		'straight': 'Straight →',
 		'corner': 'Corner ⮌{{n}}',
 		'uphill': 'Uphill ↗',

@@ -58,7 +58,8 @@ const STRINGS_ja = Object.freeze({
 		'basinn': '{{n}}バ身',
 		'conditions': '発動条件',
 		'distance_type': Object.freeze(['', '短距離', 'マイル', '中距離', '長距離']),
-		'duration': '基準持続時間',
+		'baseduration': '基準持続時間',
+		'effectiveduration': '効果時間（{{distance}}m）',
 		'effects': '効果',
 		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'デビュー', 999: '毎日'}),
 		'ground_condition': Object.freeze(['', '良', '稍重', '重', '不良']),
@@ -120,7 +121,8 @@ const STRINGS_en = Object.freeze({
 		'basinn': '{{n}} bashin',
 		'conditions': 'Conditions:',
 		'distance_type': Object.freeze(['', 'Short', 'Mile', 'Medium', 'Long']),
-		'duration': 'Base duration:',
+		'baseduration': 'Base duration:',
+		'effectiveduration': 'Effective duration ({{distance}}m):',
 		'effects': 'Effects:',
 		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'Debut', 999: 'Daily races'}),
 		'ground_condition': Object.freeze(['', 'Good', 'Yielding', 'Soft', 'Heavy']),
@@ -388,7 +390,13 @@ export function ExpandedSkillDetails(props) {
 									</div>
 								)}
 							</div>
-							{alt.baseDuration > 0 && <span class="skillDuration"><Text id="skilldetails.duration" />{' '}<Text id="skilldetails.seconds" fields={{n: alt.baseDuration / 10000}} /></span>}
+							{alt.baseDuration > 0 && <span class="skillDuration"><Text id="skilldetails.baseduration" />{' '}<Text id="skilldetails.seconds" fields={{n: alt.baseDuration / 10000}} /></span>}
+							{props.distanceFactor && alt.baseDuration > 0 &&
+								<span class="skillDuration">
+									<Text id="skilldetails.effectiveduration" fields={{distance: props.distanceFactor}} />{' '}
+									<Text id="skilldetails.seconds" fields={{n: alt.baseDuration / 10000 * (props.distanceFactor / 1000)}} />
+								</span>
+							}
 						</div>
 					)}
 				</div>
@@ -403,7 +411,7 @@ export function SkillDetailsList(props) {
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<ul class="skillDetailsList">
-				{Array.from(props.ids).map((id,i) => <li><ExpandedSkillDetails id={id} color={props.colors ? props.colors[i % props.colors.length] : null} /></li>)}
+				{Array.from(props.ids).map((id,i) => <li><ExpandedSkillDetails id={id} color={props.colors ? props.colors[i % props.colors.length] : null} distanceFactor={props.distanceFactor} /></li>)}
 			</ul>
 		</IntlProvider>
 	);
