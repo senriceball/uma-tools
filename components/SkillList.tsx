@@ -394,7 +394,7 @@ export function ExpandedSkillDetails(props) {
 							{props.distanceFactor && alt.baseDuration > 0 &&
 								<span class="skillDuration">
 									<Text id="skilldetails.effectiveduration" fields={{distance: props.distanceFactor}} />{' '}
-									<Text id="skilldetails.seconds" fields={{n: alt.baseDuration / 10000 * (props.distanceFactor / 1000)}} />
+									<Text id="skilldetails.seconds" fields={{n: +(alt.baseDuration / 10000 * (props.distanceFactor / 1000)).toFixed(2)}} />
 								</span>
 							}
 						</div>
