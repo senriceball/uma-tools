@@ -1,5 +1,5 @@
 import { h, render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 
 import { Language, LanguageSelect, defaultLanguage } from '../components/Language';
@@ -92,9 +92,14 @@ const colors = [
 
 function App(props) {
 	const [language, setLanguage] = useState(defaultLanguage());
-	const [courseId, setCourseId] = useState(DefaultCourseId);
-	const [selectedSkills, setSelectedSkills] = useState(new Set());
+	const [courseId, setCourseId] = useState(() => +(/cid=(\d+)/.exec(window.location.hash) || [null, DefaultCourseId])[1]);
+	const [selectedSkills, setSelectedSkills] = useState(() => new Set((/sid=(\d+(?:,\d+)*)/.exec(window.location.hash) || [null, ''])[1].split(',').filter(Boolean)));
+	console.log(courseId, selectedSkills);
 	const [skillsOpen, setSkillsOpen] = useState(false);
+	
+	useEffect(function () {
+		window.location.replace(`#cid=${courseId}${selectedSkills.size == 0 ? "" : ",sid="}${Array.from(selectedSkills).join(',')}`);
+	}, [courseId, selectedSkills]);
 	
 	function setSelectedSkillsAndClose(ids) {
 		setSelectedSkills(ids);
