@@ -23,10 +23,12 @@ import './app.css';
 const DefaultCourseId = 10506;
 
 const UI_ja = Object.freeze({
+	'title': 'ウマ娘スキル発動ビジュアライザ',
 	'addskill': '+ スキル追加'
 });
 
 const UI_en = Object.freeze({
+	'title': 'Umamusume Skill Visualizer',
 	'addskill': '+ Add Skill'
 });
 
@@ -96,11 +98,15 @@ function App(props) {
 	const [selectedSkills, setSelectedSkills] = useState(() => new Set((/sid=(\d+(?:,\d+)*)/.exec(window.location.hash) || [null, ''])[1].split(',').filter(Boolean)));
 	console.log(courseId, selectedSkills);
 	const [skillsOpen, setSkillsOpen] = useState(false);
-	
+
+	useEffect(function () {
+		document.title = language == 'ja' ? UI_ja.title : UI_en.title;
+	}, [language]);
+
 	useEffect(function () {
 		window.location.replace(`#cid=${courseId}${selectedSkills.size == 0 ? "" : ",sid="}${Array.from(selectedSkills).join(',')}`);
 	}, [courseId, selectedSkills]);
-	
+
 	function setSelectedSkillsAndClose(ids) {
 		setSelectedSkills(ids);
 		setSkillsOpen(false);
