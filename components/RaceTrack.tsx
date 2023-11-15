@@ -181,15 +181,19 @@ export function RaceTrack(props) {
 	, [props.courseid]);
 
 	const almostEverything = useMemo(function () {
-		const highestPoint = course.slopes.reduce((x,s) => {
-			const [last,highest] = x;
-			const us = last + s.slope / 1000000 * s.length;
+		const flatLevel = 50;
+		const [_, highestPoint, lowestPoint] = course.slopes.reduce((x,s) => {
+			const [last,highest,lowest] = x;
+			const us = last + s.slope / 10000 * s.length;
 			if (us > highest) {
-				return [us,us];
+				return [us,us,lowest];
+			} else if (us < lowest) {
+				return [us,highest,us];
 			} else {
-				return [us,highest];
+				return [us,highest,lowest];
 			}
-		}, [0,0])[1];
+		}, [0,1,0]);
+		const range = highestPoint - (lowestPoint + highestPoint > -30 ? 0 : lowestPoint);
 		const full = course.slopes.slice();
 		let lastEnd = 0;
 		course.slopes.forEach((s,i) => {
@@ -205,7 +209,7 @@ export function RaceTrack(props) {
 		const slopeEndHeights = [50];
 		const slopes = full.reduce((elems,s,i) => {
 			const lastEndHeight = slopeEndHeights[slopeEndHeights.length - 1];
-			const thisEndHeight = lastEndHeight - (s.slope / 1000000 * s.length) / highestPoint * 40;
+			const thisEndHeight = lastEndHeight - (s.slope / 10000 * s.length) / range * 40;
 			slopeEndHeights.push(thisEndHeight);
 			if (s.slope == 0) {
 				elems.push(<rect x={`${s.start / course.distance * 100}%`} y={`${lastEndHeight * 0.262}%`} width={`${s.length / course.distance * 100}%`} height="26.2%" fill="rgb(211,243,68)" />);

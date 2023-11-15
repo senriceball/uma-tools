@@ -96,7 +96,6 @@ function App(props) {
 	const [language, setLanguage] = useLanguageSelect();
 	const [courseId, setCourseId] = useState(() => +(/cid=(\d+)/.exec(window.location.hash) || [null, DefaultCourseId])[1]);
 	const [selectedSkills, setSelectedSkills] = useState(() => new Set((/sid=(\d+(?:,\d+)*)/.exec(window.location.hash) || [null, ''])[1].split(',').filter(Boolean)));
-	console.log(courseId, selectedSkills);
 	const [skillsOpen, setSkillsOpen] = useState(false);
 
 	useEffect(function () {
