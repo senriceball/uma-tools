@@ -2,7 +2,7 @@ import { h, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 
-import { Language, LanguageSelect, defaultLanguage } from '../components/Language';
+import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
 import { SkillList, SkillDetailsList } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
@@ -93,7 +93,7 @@ const colors = [
 ];
 
 function App(props) {
-	const [language, setLanguage] = useState(defaultLanguage());
+	const [language, setLanguage] = useLanguageSelect();
 	const [courseId, setCourseId] = useState(() => +(/cid=(\d+)/.exec(window.location.hash) || [null, DefaultCourseId])[1]);
 	const [selectedSkills, setSelectedSkills] = useState(() => new Set((/sid=(\d+(?:,\d+)*)/.exec(window.location.hash) || [null, ''])[1].split(',').filter(Boolean)));
 	console.log(courseId, selectedSkills);
