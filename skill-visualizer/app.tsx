@@ -23,12 +23,12 @@ import './app.css';
 const DefaultCourseId = 10506;
 
 const UI_ja = Object.freeze({
-	'title': 'ウマ娘スキル発動ビジュアライザ',
+	'title': 'ウマ娘スキル発動位置可視化ツール',
 	'addskill': '+ スキル追加'
 });
 
 const UI_en = Object.freeze({
-	'title': 'Umamusume Skill Visualizer',
+	'title': 'Umamusume Skill Activation Visualizer',
 	'addskill': '+ Add Skill'
 });
 
