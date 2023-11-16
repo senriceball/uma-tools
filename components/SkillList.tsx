@@ -72,6 +72,7 @@ const STRINGS_ja = Object.freeze({
 		'running_style': Object.freeze(['', '逃げ', '先行', '差し', '追込']),
 		'season': Object.freeze(['', '早春', '夏', '秋', '冬', '春']),
 		'seconds': '{{n}}s',
+		'slope': Object.freeze(['平地', '上り坂', '下り坂']),
 		'speed': '{{n}}m/s',
 		'time': Object.freeze(['', '朝', '昼', '夕方', '夜']),
 		'weather': Object.freeze(['', '晴れ', '曇り', '雨', '雪'])
@@ -135,6 +136,7 @@ const STRINGS_en = Object.freeze({
 		'running_style': Object.freeze(['', 'Runner', 'Leader', 'Betweener', 'Chaser']),
 		'season': Object.freeze(['', 'Early spring', 'Summer', 'Autumn', 'Winter', 'Late spring']),
 		'seconds': '{{n}}s',
+		'slope': Object.freeze(['Flat', 'Uphill', 'Downhill']),
 		'speed': '{{n}}m/s',
 		'time': Object.freeze(['', 'Morning', 'Mid day', 'Evening', 'Night']),
 		'weather': Object.freeze(['', 'Sunny', 'Cloudy', 'Rainy', 'Snowy'])
@@ -261,6 +263,7 @@ const conditionFormatters = new Proxy({
 	rotation: fmtString('rotation'),
 	running_style: fmtString('running_style'),
 	season: fmtString('season'),
+	slope: fmtString('slope'),
 	time: fmtString('time'),
 	track_id(arg: number) {
 		return <abbr title={arg}><Text id={`tracknames.${arg}`} /></abbr>;
