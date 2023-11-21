@@ -323,12 +323,16 @@ export function RaceTrack(props) {
 				{trackNameHeader}
 				<svg version="1.1" width={props.width} height={props.height} xmlns="http://www.w3.org/2000/svg" class="racetrackView" data-courseid={props.courseid} onMouseMove={doMouseMove} onMouseLeave={doMouseLeave}>
 					{almostEverything}
-					{props.regions && props.regions.map(desc => {
+					{props.regions && props.regions.reduce((state,desc) => {
 						if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
-							const x = desc.regions[0].start / course.distance * 100;
-							return <line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={4 - Math.min(Math.floor(x),2)} />;
+							let x = desc.regions[0].start / course.distance * 100;
+							while (state.seen.has(x)) {
+								x += 3 / props.width * 100;
+							}
+							state.seen.add(x);
+							state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={4 - Math.min(Math.floor(x),2)} />);
 						} else {
-							return (
+							state.elem.push(
 								<Fragment>
 									{desc.regions.map(r =>
 										<rect x={`${r.start / course.distance * 100}%`} y="0" width={`${(r.end - r.start) / course.distance * 100}%`} height="100%" fill={desc.color.fill} stroke={desc.color.stroke} />
@@ -336,7 +340,8 @@ export function RaceTrack(props) {
 								</Fragment>
 							);
 						}
-					})}
+						return state;
+					}, {seen: new Set(), elem: []}).elem}
 					<line class="mouseoverLine" x1="-5" y1="0" x2="-5" y2="100%" stroke="rgb(121,64,22)" stroke-width="2" />
 					<text class="mouseoverText" x="-5" y="-5" fill="rgb(121,64,22)"></text>
 				</svg>

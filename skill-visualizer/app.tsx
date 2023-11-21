@@ -53,7 +53,7 @@ const conditions = Object.freeze(Object.assign({}, conditionsWithActivateCountsA
 	accumulatetime: immediate({
 		filterGte(regions: RegionList, t: number, course: CourseData, _: HorseParameters) {
 			// obviously we can't know this condition without actually running the race, and the actual distance traveled depends on the uma's strategy, power stat,
-			// skills (opening leg accel skills), and other things that aren't available in a static environment like here. so intead guess approximately how far we
+			// skills (opening leg accel skills), and other things that aren't available in a static environment like this. so instead guess approximately how far we
 			// travel in t seconds by just using the course base speed.
 			// this will typically be a bit high since umas need to accelerate and non-nige strategies have lower than 1.0 StrategyPhaseCoefficient for phase 0
 			// except for oonige in which case it could be a bit low since their phase 0 speed is so high
