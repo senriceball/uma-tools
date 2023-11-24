@@ -42,6 +42,8 @@
   columns: 4;
   font-size: 16px;
   list-style-type: none;
+  margin-left: -5px;
+  padding: 0;
 }
 .skill {
   border-radius: 8px;
@@ -107,12 +109,11 @@
   margin: 10px;
   overflow: hidden;
   padding: 0.4em;
-  width: 18em;
+  width: 19.3em;
 }
 .expandedSkillColorMarker {
   height: 5px;
-  margin-left: 0.7em;
-  width: 17.8em;
+  margin: 0 12px;
 }
 .skillDetails {
   border-style: solid;
