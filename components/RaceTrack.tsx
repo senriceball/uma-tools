@@ -327,10 +327,10 @@ export function RaceTrack(props) {
 						if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
 							let x = desc.regions[0].start / course.distance * 100;
 							while (state.seen.has(x)) {
-								x += 3 / props.width * 100;
+								x += (3 + +(x == 0)) / props.width * 100;
 							}
 							state.seen.add(x);
-							state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={4 - Math.min(Math.floor(x),2)} />);
+							state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={x == 0 ? 4 : 2} />);
 						} else {
 							state.elem.push(
 								<Fragment>
