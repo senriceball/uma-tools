@@ -7,6 +7,7 @@ import * as Matcher from '../uma-skill-tools/tools/ConditionMatcher';
 import { SkillRarity } from '../uma-skill-tools/RaceSolver.ts';
 
 import { useLanguage } from './Language';
+import { Tooltip } from './Tooltip';
 
 import './SkillList.css';
 
@@ -219,17 +220,17 @@ function fmtMeters(arg: number) {
 
 function fmtString(strId: string) {
 	return function (arg: number) {
-		return <abbr title={arg}><Text id={`skilldetails.${strId}.${arg}`} /></abbr>;
+		return <Tooltip title={arg.toString()} tall={useLanguage() == 'ja'}><Text id={`skilldetails.${strId}.${arg}`} /></Tooltip>;
 	};
 }
 
 const conditionFormatters = new Proxy({
 	accumulatetime: fmtSeconds,
 	bashin_diff_behind(arg: number) {
-		return <Localizer><abbr title={<Text id="skilldetails.meters" plural={arg * 2.5} fields={{n: arg * 2.5}} />}><Text id="skilldetails.basinn" plural={arg} fields={{n: arg}} /></abbr></Localizer>;
+		return <Localizer><Tooltip title={<Text id="skilldetails.meters" plural={arg * 2.5} fields={{n: arg * 2.5}} />}><Text id="skilldetails.basinn" plural={arg} fields={{n: arg}} /></Tooltip></Localizer>;
 	},
 	bashin_diff_infront(arg: number) {
-		return <Localizer><abbr title={<Text id="skilldetails.meters" plural={arg * 2.5} fields={{n: arg * 2.5}} />}><Text id="skilldetails.basinn" plural={arg} fields={{n: arg}} /></abbr></Localizer>;
+		return <Localizer><Tooltip title={<Text id="skilldetails.meters" plural={arg * 2.5} fields={{n: arg * 2.5}} />}><Text id="skilldetails.basinn" plural={arg} fields={{n: arg}} /></Tooltip></Localizer>;
 	},
 	behind_near_lane_time: fmtSeconds,
 	behind_near_lane_time_set1: fmtSeconds,
@@ -239,10 +240,10 @@ const conditionFormatters = new Proxy({
 	course_distance: fmtMeters,
 	distance_diff_rate: fmtPercent,
 	distance_diff_top(arg: number) {
-		return <Localizer><abbr title={<Text id="skilldetails.basinn" plural={arg / 2.5} fields={{n: arg / 2.5}} />}><Text id="skilldetails.meters" plural={arg} fields={{n: arg}} /></abbr></Localizer>;
+		return <Localizer><Tooltip title={<Text id="skilldetails.basinn" plural={arg / 2.5} fields={{n: arg / 2.5}} />}><Text id="skilldetails.meters" plural={arg} fields={{n: arg}} /></Tooltip></Localizer>;
 	},
 	distance_diff_top_float(arg: number) {
-		return <Localizer><abbr title={<Text id="skilldetails.basinn" plural={arg / 25} fields={{n: arg / 25}} />}><Text id="skilldetails.meters" plural={arg} fields={{n: (arg / 10).toFixed(1)}} /></abbr></Localizer>;
+		return <Localizer><Tooltip title={<Text id="skilldetails.basinn" plural={arg / 25} fields={{n: arg / 25}} />}><Text id="skilldetails.meters" plural={arg} fields={{n: (arg / 10).toFixed(1)}} /></Tooltip></Localizer>;
 	},
 	distance_rate: fmtPercent,
 	distance_rate_after_random: fmtPercent,
@@ -254,7 +255,7 @@ const conditionFormatters = new Proxy({
 	infront_near_lane_time: fmtSeconds,
 	motivation: fmtString('motivation'),
 	order_rate(arg: number) {
-		return <Localizer><abbr title={<Text id="skilldetails.order_rate" fields={{cm: Math.round(arg / 100 * 9), loh: Math.round(arg / 100 * 12)}} />}>{arg}</abbr></Localizer>;
+		return <Localizer><Tooltip title={<Text id="skilldetails.order_rate" fields={{cm: Math.round(arg / 100 * 9), loh: Math.round(arg / 100 * 12)}} />}>{arg}</Tooltip></Localizer>;
 	},
 	overtake_target_no_order_up_time: fmtSeconds,
 	overtake_target_time: fmtSeconds,
@@ -266,7 +267,7 @@ const conditionFormatters = new Proxy({
 	slope: fmtString('slope'),
 	time: fmtString('time'),
 	track_id(arg: number) {
-		return <abbr title={arg}><Text id={`tracknames.${arg}`} /></abbr>;
+		return <Tooltip title={arg} tall={useLanguage() == 'ja'}><Text id={`tracknames.${arg}`} /></Tooltip>;
 	},
 	weather: fmtString('weather')
 }, {
