@@ -365,9 +365,9 @@ const formatEffect = Object.freeze({
 
 export function ExpandedSkillDetails(props) {
 	const skill = skills[props.id];
+	const lang = useLanguage();
 	return (
-		<Fragment>
-			{props.color && <div class="expandedSkillColorMarker" style={`background:${props.color}`} />}
+		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<div class={`expandedSkill ${classnames[skill.rarity]}`} data-skillid={props.id}>
 				<img class="skillIcon" src={`/uma-tools/icons/${skillmeta[props.id].iconId}.png`} /> 
 				<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
@@ -404,18 +404,6 @@ export function ExpandedSkillDetails(props) {
 					)}
 				</div>
 			</div>
-		</Fragment>
-	);
-}
-
-export function SkillDetailsList(props) {
-	const lang = useLanguage();
-
-	return (
-		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
-			<ul class="skillDetailsList">
-				{Array.from(props.ids).map((id,i) => <li><ExpandedSkillDetails id={id} color={props.colors ? props.colors[i % props.colors.length] : null} distanceFactor={props.distanceFactor} /></li>)}
-			</ul>
 		</IntlProvider>
 	);
 }

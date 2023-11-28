@@ -1,9 +1,9 @@
 import { h, render } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useMemo, useEffect } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
-import { SkillList, SkillDetailsList } from '../components/SkillList';
+import { SkillList, ExpandedSkillDetails } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 
@@ -18,18 +18,27 @@ import { buildSkillData, conditionsWithActivateCountsAsRandom } from '../uma-ski
 import { ImmediatePolicy } from '../uma-skill-tools/ActivationSamplePolicy';
 import { immediate, noopImmediate } from '../uma-skill-tools/ActivationConditions';
 
+import '../components/Tooltip.css';
 import './app.css';
 
 const DefaultCourseId = 10506;
 
 const UI_ja = Object.freeze({
 	'title': 'ウマ娘スキル発動位置可視化ツール',
-	'addskill': '+ スキル追加'
+	'addskill': '+ スキル追加',
+	'notice': Object.freeze({
+		'dna': 'このコースではこのスキルは発動しない',
+		'error': '発動条件を解析するエラー'
+	})
 });
 
 const UI_en = Object.freeze({
 	'title': 'Umamusume Skill Activation Visualizer',
-	'addskill': '+ Add Skill'
+	'addskill': '+ Add Skill',
+	'notice': Object.freeze({
+		'dna': 'This skill does not activate on this track',
+		'error': 'Error parsing activation conditions'
+	})
 });
 
 const horse = Object.freeze({
@@ -69,20 +78,22 @@ const parser = getParser(conditions);
 function regionsForSkill(course: CourseData, skillId: string, color: {stroke: string, fill: string}) {
 	const wholeCourse = new RegionList();
 	wholeCourse.push(new Region(0, course.distance));
-	console.log(skillId);
 	try {
 		const sd = buildSkillData(horse, course, wholeCourse, parser, skillId, true);
-		console.log(sd);
-		if (sd == null) return {type: RegionDisplayType.Immedate, regions: [], color};
+		if (sd == null) return {err: false, type: RegionDisplayType.Immedate, regions: [], color};
 		return {
+			err: false,
 			type: sd.samplePolicy == ImmediatePolicy ? RegionDisplayType.Immediate : RegionDisplayType.Regions,
 			regions: sd.regions,
 			color
 		};
 	} catch (e) {
-		console.log(e);
-		return {type: RegionDisplayType.Immedate, regions: [], color};
+		return {err: true, type: RegionDisplayType.Immedate, regions: [], color};
 	}
+}
+
+function doesNotActivate(skillRegions) {
+	return skillRegions.regions.length == 0 || skillRegions.regions[0].start == 9999;
 }
 
 const colors = [
@@ -133,20 +144,37 @@ function App(props) {
 	const langid = +(language == 'en');
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
-	const course = CourseHelpers.getCourse(courseId); 
+	const course = CourseHelpers.getCourse(courseId);
+
+	const regions = useMemo(() => Array.from(selectedSkills).map((id,i) => regionsForSkill(course, id, colors[i % colors.length])), [selectedSkills, course]);
+	const skillDetails = useMemo(function () {
+		return Array.from(selectedSkills).map(function (id, i) {
+			const hasNotice = regions[i].err || doesNotActivate(regions[i]);
+			return (
+				<li class={`expandedSkillItem${hasNotice ? ' hasNotice' : ''}`}>
+					{regions[i].err && <div class="skillNotice hasTooltip"><span>×</span><div class="tooltip"><Text id="ui.notice.error" /><span class="arrow" /></div></div>}
+					{!regions[i].err && doesNotActivate(regions[i]) && <div class="skillNotice hasTooltip"><span>!</span><div class="tooltip"><Text id="ui.notice.dna" /><span class="arrow" /></div></div>}
+					<div class="expandedSkillColorMarker" style={`background:${colors[i % colors.length].stroke}`} />
+					<ExpandedSkillDetails id={id} distanceFactor={course.distance} />
+				</li>
+			);
+		});
+	}, [selectedSkills, course, regions]);
 	
 	return (
 		<Language.Provider value={language}>
 			<IntlProvider definition={strings}>
 				<div id="overlay" class={skillsOpen ? "skillListWrapper-open" : ""} onClick={hideSkillSelector} />
 				<LanguageSelect language={language} setLanguage={setLanguage} />
-				<RaceTrack courseid={courseId} width="960" height="220" regions={Array.from(selectedSkills).map((id,i) => regionsForSkill(course, id, colors[i % colors.length]))} />
+				<RaceTrack courseid={courseId} width="960" height="220" regions={regions} />
 				<div id="buttonsRow">
 					<TrackSelect courseid={courseId} setCourseid={setCourseId} />
 					<button id="addSkill" onClick={showSkillSelector}><Text id="ui.addskill" /></button>
 				</div>
 				<div id="skillDetailsWrapper" onClick={removeSkill}>
-					<SkillDetailsList ids={selectedSkills} colors={colors.map(c => c.stroke)} distanceFactor={course.distance} />
+					<ul class="skillDetailsList">
+						{skillDetails}
+					</ul>
 				</div>
 				<div id="skillListWrapper" class={skillsOpen ? "skillListWrapper-open" : ""}>
 					<SkillList ids={Object.keys(skills)} selected={selectedSkills} setSelected={setSelectedSkillsAndClose} />

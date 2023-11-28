@@ -11,6 +11,59 @@
 	width: 85%;
 }
 
+.expandedSkillColorMarker {
+	height: 5px;
+	margin: 0 12px;
+}
+
+.expandedSkillItem.hasNotice {
+	margin-right: 20px;
+}
+
+.hasNotice .expandedSkill {
+	filter: brightness(0.8);
+}
+
+.skillNotice {
+	background: red;
+	float: right;
+	height: 12px;
+	left: 16px;
+	position: relative;
+	width: 22px;
+}
+
+.skillNotice::before {
+	border-bottom: 6px solid red;
+	border-left: 11px solid transparent;
+	border-right: 11px solid transparent;
+	content: " ";
+	height: 0;
+	position: absolute;
+	top: -6px;
+	width: 0;
+}
+
+.skillNotice::after {
+	border-left: 11px solid transparent;
+	border-right: 11px solid transparent;
+	border-top: 6px solid red;
+	bottom: -6px;
+	content: " ";
+	height: 0;
+	position: absolute;
+	width: 0;
+}
+
+.skillNotice > span {
+	color: white;
+	font: bold 16px sans-serif;
+	position: absolute;
+	text-align: center;
+	top: -2px;
+	width: 100%;
+}
+
 #buttonsRow {
 	margin: auto;
 	position: relative;
@@ -30,7 +83,7 @@
 }
 
 #addSkill {
-   	background: none;
+	 	background: none;
 	border: 1px solid rgb(148, 150, 189);
 	border-radius: 8px;
 	padding: 0.7em;

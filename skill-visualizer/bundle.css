@@ -111,10 +111,6 @@
   padding: 0.4em;
   width: 19.3em;
 }
-.expandedSkillColorMarker {
-  height: 5px;
-  margin: 0 12px;
-}
 .skillDetails {
   border-style: solid;
   border-width: 2px 0 0 0;
@@ -226,6 +222,35 @@
   stroke-width: 2px;
 }
 
+/* ../components/Tooltip.css */
+.tooltip {
+  background: black;
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: white;
+  display: none;
+  font: normal 14px sans-serif;
+  left: 50%;
+  min-width: 200px;
+  padding: 4px 8px;
+  position: absolute;
+  top: -15px;
+  transform: translate(-50%, -100%);
+}
+.hasTooltip:hover .tooltip {
+  display: block;
+}
+.tooltip .arrow {
+  bottom: -6px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid black;
+  height: 0;
+  left: calc(50% - 6px);
+  position: absolute;
+  width: 0;
+}
+
 /* app.css */
 .racetrackWrapper {
   margin: auto;
@@ -236,6 +261,52 @@
 .skillDetailsList {
   margin: auto;
   width: 85%;
+}
+.expandedSkillColorMarker {
+  height: 5px;
+  margin: 0 12px;
+}
+.expandedSkillItem.hasNotice {
+  margin-right: 20px;
+}
+.hasNotice .expandedSkill {
+  filter: brightness(0.8);
+}
+.skillNotice {
+  background: red;
+  float: right;
+  height: 12px;
+  left: 16px;
+  position: relative;
+  width: 22px;
+}
+.skillNotice::before {
+  border-bottom: 6px solid red;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  content: " ";
+  height: 0;
+  position: absolute;
+  top: -6px;
+  width: 0;
+}
+.skillNotice::after {
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 6px solid red;
+  bottom: -6px;
+  content: " ";
+  height: 0;
+  position: absolute;
+  width: 0;
+}
+.skillNotice > span {
+  color: white;
+  font: bold 16px sans-serif;
+  position: absolute;
+  text-align: center;
+  top: -2px;
+  width: 100%;
 }
 #buttonsRow {
   margin: auto;
