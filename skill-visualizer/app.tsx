@@ -21,7 +21,7 @@ import { immediate, noopImmediate } from '../uma-skill-tools/ActivationCondition
 import '../components/Tooltip.css';
 import './app.css';
 
-const DefaultCourseId = 10506;
+const DefaultCourseId = 10902;
 
 const UI_ja = Object.freeze({
 	'title': 'ウマ娘スキル発動位置可視化ツール',
