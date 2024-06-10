@@ -21,8 +21,7 @@ const STRINGS_ja = Object.freeze({
 		'inner': ' （内）',
 		'outer': ' （外）',
 		'outin': ' （外→内）',
-		'left': '左',
-		'right': '右',
+		'orientation': Object.freeze(['', '右', '左', '', '直']),
 		'turf': '芝',
 		'dirt': 'ダート',
 		'straight': '直線',
@@ -50,8 +49,7 @@ const STRINGS_en = Object.freeze({
 		'inner': ' (inner)',
 		'outer': ' (outer)',
 		'outin': ' (outer→inner)',
-		'left': '(counterclockwise)',
-		'right': '(clockwise)',
+		'orientation': Object.freeze(['', '(clockwise)', '(counterclockwise)', '', '(straight)']),
 		'turf': 'Turf',
 		'dirt': 'Dirt',
 		'straight': 'Straight →',
@@ -176,7 +174,7 @@ export function RaceTrack(props) {
 				'distance': course.distance,
 				'inout': <Text id={`racetrack.${inoutKey[courses[props.courseid].course]}`} />,
 				'surface': <Text id={course.surface == Surface.Turf ? 'racetrack.turf' : 'racetrack.dirt'} />
-			}} />{' '}<Text id={course.turn == Orientation.Clockwise ? 'racetrack.right' : 'racetrack.left'} />
+			}} />{' '}<Text id={`racetrack.orientation.${course.turn}`} />
 		</div>
 	, [props.courseid]);
 
