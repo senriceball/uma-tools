@@ -70,7 +70,14 @@ const conditions = Object.freeze(Object.assign({}, conditionsWithActivateCountsA
 			return regions.rmap(r => r.intersect(estimate));
 		}
 	}),
-	running_style: noopImmediate
+	grade: noopImmediate,
+	ground_condition: noopImmediate,
+	motivation: noopImmediate,
+	popularity: noopImmediate,
+	running_style: noopImmediate,
+	season: noopImmediate,
+	time: noopImmediate,
+	weather: noopImmediate
 }));
 
 const parser = getParser(conditions);
@@ -79,7 +86,7 @@ function regionsForSkill(course: CourseData, skillId: string, color: {stroke: st
 	const wholeCourse = new RegionList();
 	wholeCourse.push(new Region(0, course.distance));
 	try {
-		const sd = buildSkillData(horse, course, wholeCourse, parser, skillId, true);
+		const sd = buildSkillData(horse, {}, course, wholeCourse, parser, skillId, true);
 		if (sd == null) return {err: false, type: RegionDisplayType.Immedate, regions: [], color};
 		return {
 			err: false,
