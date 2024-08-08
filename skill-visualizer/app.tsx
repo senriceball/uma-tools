@@ -26,6 +26,9 @@ const DefaultCourseId = 10708;
 const UI_ja = Object.freeze({
 	'title': 'ウマ娘スキル発動位置可視化ツール',
 	'addskill': '+ スキル追加',
+	'thresholds': '補正ステータス：',
+	'stats': Object.freeze(['なし', 'スピード', 'スタミナ', 'パワー', '根性', '賢さ']),
+	'joiner': '、',
 	'notice': Object.freeze({
 		'dna': 'このコースではこのスキルは発動しない',
 		'error': '発動条件を解析しながらエラーが出た'
@@ -35,6 +38,9 @@ const UI_ja = Object.freeze({
 const UI_en = Object.freeze({
 	'title': 'Umamusume Skill Activation Visualizer',
 	'addskill': '+ Add Skill',
+	'thresholds': 'Stat thresholds: ',
+	'stats': Object.freeze(['None', 'Speed', 'Stamina', 'Power', 'Guts', 'Wisdom']),
+	'joiner': ',',
 	'notice': Object.freeze({
 		'dna': 'This skill does not activate on this track',
 		'error': 'Error parsing activation conditions'
@@ -153,6 +159,8 @@ function App(props) {
 
 	const course = CourseHelpers.getCourse(courseId);
 
+	const statThresholds = course.courseSetStatus.length == 0 ? strings.ui.stats[0] : course.courseSetStatus.map(s => strings.ui.stats[s]).join(strings.ui.joiner);
+
 	const regions = useMemo(() => Array.from(selectedSkills).map((id,i) => regionsForSkill(course, id, colors[i % colors.length])), [selectedSkills, course]);
 	const skillDetails = useMemo(function () {
 		return Array.from(selectedSkills).map(function (id, i) {
@@ -176,6 +184,7 @@ function App(props) {
 				<RaceTrack courseid={courseId} width="960" height="220" regions={regions} />
 				<div id="buttonsRow">
 					<TrackSelect courseid={courseId} setCourseid={setCourseId} />
+					<div id="thresholds"><Text id="ui.thresholds" />{statThresholds}</div>
 					<button id="addSkill" onClick={showSkillSelector}><Text id="ui.addskill" /></button>
 				</div>
 				<div id="skillDetailsWrapper" onClick={removeSkill}>

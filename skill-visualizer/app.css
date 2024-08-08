@@ -86,8 +86,18 @@
 	border-right: none;
 }
 
+#thresholds {
+	font-size: 0.8em;
+	left: 50%;
+	line-height: 2.8em;
+	position: absolute;
+	text-align: center;
+	top: 0;
+	transform: translate(-50%, 0);
+}
+
 #addSkill {
-	 	background: none;
+	background: none;
 	border: 1px solid rgb(148, 150, 189);
 	border-radius: 8px;
 	padding: 0.7em;
