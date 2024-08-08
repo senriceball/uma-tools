@@ -28,7 +28,7 @@ const UI_ja = Object.freeze({
 	'addskill': '+ スキル追加',
 	'notice': Object.freeze({
 		'dna': 'このコースではこのスキルは発動しない',
-		'error': '発動条件を解析するエラー'
+		'error': '発動条件を解析しながらエラーが出た'
 	})
 });
 
