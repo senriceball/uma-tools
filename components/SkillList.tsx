@@ -12,7 +12,12 @@ import { Tooltip } from './Tooltip';
 import './SkillList.css';
 
 import skills from '../uma-skill-tools/data/skill_data.json';
-import skillmeta from '../skill_meta.json';
+import skill_meta from '../skill_meta.json';
+
+function skillmeta(id: string) {
+	// handle the fake skills (e.g., variations of Sirius unique) inserted by make_skill_data with ids like 100701-1
+	return skill_meta[id.split('-')[0]];
+}
 
 const Parser = getParser(Matcher.mockConditions);
 
@@ -195,7 +200,7 @@ const classnames = Object.freeze(['', 'skill-white', 'skill-gold', 'skill-unique
 export function Skill(props) {
 	return (
 		<div class={`skill ${classnames[skills[props.id].rarity]} ${props.selected ? 'selected' : ''}`} data-skillid={props.id}>
-			<img class="skillIcon" src={`/uma-tools/icons/${skillmeta[props.id].iconId}.png`} /> 
+			<img class="skillIcon" src={`/uma-tools/icons/${skillmeta(props.id).iconId}.png`} /> 
 			<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
 		</div>
 	);
@@ -370,7 +375,7 @@ export function ExpandedSkillDetails(props) {
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<div class={`expandedSkill ${classnames[skill.rarity]}`} data-skillid={props.id}>
-				<img class="skillIcon" src={`/uma-tools/icons/${skillmeta[props.id].iconId}.png`} /> 
+				<img class="skillIcon" src={`/uma-tools/icons/${skillmeta(props.id).iconId}.png`} /> 
 				<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
 				<div class="skillDetails">
 					{skills[props.id].alternatives.map(alt =>
@@ -453,14 +458,14 @@ export function SkillList(props) {
 		});
 	});
 	
-	const selectedMap = new Map(Array.from(props.selected).map(id => [skillmeta[id].groupId, id]));
+	const selectedMap = new Map(Array.from(props.selected).map(id => [skillmeta(id).groupId, id]));
 
 	function toggleSelected(e) {
 		const se = e.target.closest('div.skill');
 		if (se == null) return;
 		e.stopPropagation();
 		const id = se.dataset.skillid;
-		const groupId = skillmeta[id].groupId;
+		const groupId = skillmeta(id).groupId;
 		const old = selectedMap.get(groupId) == id;
 		const newSelected = new Set(selectedMap.values());
 		if (selectedMap.has(groupId)) {
@@ -494,7 +499,7 @@ export function SkillList(props) {
 				const check = groups_filters[group].filter(f => active[group][f]);
 				if (check.length == 0) return true;
 				if (group == 'rarity') return check.some(f => matchRarity(id, f));
-				else if (group == 'icontype') return check.some(f => iconIdPrefixes[f].some(p => skillmeta[id].iconId.startsWith(p)));
+				else if (group == 'icontype') return check.some(f => iconIdPrefixes[f].some(p => skillmeta(id).iconId.startsWith(p)));
 				return check.some(f => filterOps[f].some(op => parsedConditions[id].some(alt => Matcher.treeMatch(op, alt))));
 			});
 			if (pass) {
@@ -516,7 +521,7 @@ export function SkillList(props) {
 		return <button data-filter={props.type} class={`iconFilterButton ${active[props.group][props.type] ? 'active': ''}`} style={`background-image:url(/uma-tools/icons/${props.type}1.png)`}></button>
 	}
 
-	const items = props.ids.map(id => <li key={id} class={visible.has(id) ? '' : 'hidden'}><Skill id={id} selected={selectedMap.get(skillmeta[id].groupId) == id} /></li>);
+	const items = props.ids.map(id => <li key={id} class={visible.has(id) ? '' : 'hidden'}><Skill id={id} selected={selectedMap.get(skillmeta(id).groupId) == id} /></li>);
 
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
