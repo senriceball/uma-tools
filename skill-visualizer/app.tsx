@@ -78,6 +78,7 @@ const conditions = Object.freeze(Object.assign({}, conditionsWithActivateCountsA
 	}),
 	grade: noopImmediate,
 	ground_condition: noopImmediate,
+	is_used_skill_id: noopImmediate,
 	motivation: noopImmediate,
 	popularity: noopImmediate,
 	running_style: noopImmediate,
