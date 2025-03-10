@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.5.3",
+    "accessible-autocomplete": "^3.0.1",
     "preact": "^10.18.1",
     "preact-i18n": "^2.4.0-preactx",
     "unassert-cli": "github:unassert-js/unassert-cli"
