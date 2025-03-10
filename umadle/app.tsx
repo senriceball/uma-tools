@@ -125,7 +125,9 @@ function Done(props) {
   }
 }
 
-const dtoday = new Date();
+const localdate = new Date();
+const utc = localdate.getTime() + localdate.getTimezoneOffset() * 60000;
+const dtoday = new Date(utc + -6 * 3600000);
 const today = dtoday.toLocaleDateString('ja-JP', {year: 'numeric', month: '2-digit', day: '2-digit'}).replace(/\//g, '-');
 const rng = new Rule30CARng(Math.imul(dtoday.getFullYear(), 524287) ^ Math.imul(dtoday.getMonth(), 6700417) ^ Math.imul(dtoday.getDay(), 131071));
 for (let i = 0; i < 1000; ++i) {
