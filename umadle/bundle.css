@@ -74,6 +74,9 @@
 .result > div:first-child {
   font-size: 1.6em;
 }
+.result > a {
+  display: block;
+}
 #trueanswer > img {
   height: 2em;
   margin-right: 5px;

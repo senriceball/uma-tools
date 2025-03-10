@@ -111,7 +111,8 @@ function Done(props) {
     return (
       <div class="result correct">
         <div>Correct!</div>
-        <CopyButton result="win" guesses={props.guesses} target={props.target} date={props.date} />
+        {!props.isPractice && <CopyButton result="win" guesses={props.guesses} target={props.target} date={props.date} />}
+        <a href="#" onClick={props.practiceCb}>{props.isPractice ? "Go again" : "Practice"}</a>
       </div>
     );
   } else {
@@ -119,7 +120,8 @@ function Done(props) {
       <div class="result failed">
         <div>:(</div>
         <div id="trueanswer"><span>Answer: </span><img src={icons[props.target]} /><span>{props.target}</span></div>
-        <CopyButton result="lose" guesses={props.guesses} target={props.target} date={props.date} />
+        {!props.isPractice && <CopyButton result="lose" guesses={props.guesses} target={props.target} date={props.date} />}
+        <a href="#" onClick={props.practiceCb}>{props.isPractice ? "Go again" : "Practice"}</a>
       </div>
     );
   }
@@ -146,8 +148,10 @@ function renderSuggestion(name) {
 }
 
 function App(props) {
+  const [uma, setUma] = useState(() => todaysUma);
   const [done, setDone] = useState(() => false);
   const [guesses, setGuesses] = useState(() => []);
+  const [isPractice, setPractice] = useState(() => false);
 
   function doGuess(guessedUma) {
     if (!umas.hasOwnProperty(guessedUma)) {
@@ -155,7 +159,7 @@ function App(props) {
     }
     const newGuesses = guesses.concat([guessedUma]);
     setGuesses(newGuesses);
-    if (guessedUma == todaysUma) {
+    if (guessedUma == uma) {
       setDone('win');
     } else if (newGuesses.length == NUM_GUESSES) {
       setDone('lose');
@@ -164,12 +168,19 @@ function App(props) {
     window.requestAnimationFrame(() => document.getElementById('umainput').value = '');
   }
 
+  function practice() {
+    setDone(false);
+    setGuesses([]);
+    setUma(Object.keys(umas)[rng.uniform(Object.keys(umas).length)]);
+    setPractice(true);
+  }
+
   return (
     <Fragment>
-      <Grid guesses={guesses} target={umas[todaysUma]} />
+      <Grid guesses={guesses} target={umas[uma]} />
       {
         done
-        ? <Done result={done} guesses={guesses} target={todaysUma} date={today} />
+        ? <Done result={done} guesses={guesses} target={uma} date={today} isPractice={isPractice} practiceCb={practice} />
         : <Autocomplete id="umainput" source={suggestUma} confirmOnBlur={false} onConfirm={doGuess} templates={{suggestion: renderSuggestion}} />
       }
     </Fragment>
