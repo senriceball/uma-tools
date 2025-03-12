@@ -171,7 +171,8 @@ function App(props) {
   function practice() {
     setDone(false);
     setGuesses([]);
-    setUma(Object.keys(umas)[rng.uniform(Object.keys(umas).length)]);
+    // use Math.random() instead of Rule30CARng#uniform() here so the sequence isn't deterministic for a given day
+    setUma(Object.keys(umas)[Math.floor(Math.random() * Object.keys(umas).length)]);
     setPractice(true);
   }
 
