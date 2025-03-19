@@ -6,7 +6,7 @@ import { Rule30CARng } from '../uma-skill-tools/Random';
 import './app.css';
 import '../node_modules/accessible-autocomplete/dist/accessible-autocomplete.min.css';
 
-import icons from '../icons.json';
+import icons from './icons.json';
 import umas from './numbers.json';
 
 const NUM_GUESSES = 10;
