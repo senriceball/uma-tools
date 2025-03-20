@@ -91,7 +91,8 @@ const coursesByTrack = (function () {
 
 export function TrackSelect(props) {
 	const lang = useLanguage();
-	const [trackid, setTrackid] = useState(courses[props.courseid].raceTrackId);
+	let [trackid, setTrackid] = useState(0);
+	setTrackid(trackid = courses[props.courseid].raceTrackId);
 	const changeCourse = useCallback((e) => props.setCourseid(+e.target.value), [props.setCourseid]);
 	
 	function changeTrack(e) {

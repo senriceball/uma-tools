@@ -2,6 +2,7 @@ import { h, render } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 import { Record } from 'immutable';
+import { SortedSet } from 'immutable-sorted';
 import * as d3 from 'd3';
 
 import { CourseHelpers } from '../uma-skill-tools/CourseData';
@@ -100,13 +101,84 @@ class RaceParams extends Record({
 	grade: Grade.G1
 }) {}
 
+const DEFAULT_COURSE_ID = 10101;
+const DEFAULT_SAMPLES = 2000;
+
+async function serialize(courseId: number, nsamples: number, racedef: RaceParams, uma1: HorseState, uma2: HorseState) {
+	const json = JSON.stringify({
+		courseId,
+		nsamples,
+		racedef: racedef.toJS(),
+		uma1: uma1.toJS(),
+		uma2: uma2.toJS()
+	});
+	const enc = new TextEncoder();
+	const stringStream = new ReadableStream({
+		start(controller) {
+			controller.enqueue(enc.encode(json));
+			controller.close();
+		}
+	});
+	const zipped = stringStream.pipeThrough(new CompressionStream('gzip'));
+	const reader = zipped.getReader();
+	let buf = new Uint8Array();
+	let result;
+	while ((result = await reader.read())) {
+		if (result.done) {
+			return encodeURIComponent(btoa(String.fromCharCode(...buf)));
+		} else {
+			buf = new Uint8Array([...buf, ...result.value]);
+		}
+	}
+}
+
+async function deserialize(hash) {
+	const zipped = atob(decodeURIComponent(hash));
+	const buf = new Uint8Array(zipped.split('').map(c => c.charCodeAt(0)));
+	const stringStream = new ReadableStream({
+		start(controller) {
+			controller.enqueue(buf);
+			controller.close();
+		}
+	});
+	const unzipped = stringStream.pipeThrough(new DecompressionStream('gzip'));
+	const reader = unzipped.getReader();
+	const decoder = new TextDecoder();
+	let json = '';
+	let result;
+	while ((result = await reader.read())) {
+		if (result.done) {
+			try {
+				const o = JSON.parse(json);
+				return {
+					courseId: o.courseId,
+					nsamples: o.nsamples,
+					racedef: new RaceParams(o.racedef),
+					uma1: new HorseState(o.uma1).set('skills', SortedSet(o.uma1.skills)),
+					uma2: new HorseState(o.uma2).set('skills', SortedSet(o.uma2.skills))
+				};
+			} catch (_) {
+				return {
+					courseId: DEFAULT_COURSE_ID,
+					nsamples: DEFAULT_SAMPLES,
+					racedef: new RaceParams(),
+					uma1: new HorseState(),
+					uma2: new HorseState()
+				};
+			}
+		} else {
+			json += decoder.decode(result.value);
+		}
+	}
+}
+
 function App(props) {
 	//const [language, setLanguage] = useLanguageSelect();
-	const [courseId, setCourseId] = useState(10101);
+	const [courseId, setCourseId] = useState(DEFAULT_COURSE_ID);
 	const [skillsOpen, setSkillsOpen] = useState(false);
 	const [results, setResults] = useState([]);
 	const [racedef, setRaceDef] = useState(() => new RaceParams());
-	const [nsamples, setSamples] = useState(2000);
+	const [nsamples, setSamples] = useState(DEFAULT_SAMPLES);
 
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
@@ -116,6 +188,26 @@ function App(props) {
 
 	const [uma1, setUma1] = useState(() => new HorseState());
 	const [uma2, setUma2] = useState(() => new HorseState());
+
+	useEffect(function () {
+		if (window.location.hash) {
+			deserialize(window.location.hash.slice(1)).then(o => {
+				setCourseId(o.courseId);
+				setSamples(o.nsamples);
+				setRaceDef(o.racedef);
+				setUma1(o.uma1);
+				setUma2(o.uma2);
+			});
+		}
+	}, []);
+
+	function copyStateUrl(e) {
+		e.preventDefault();
+		serialize(courseId, nsamples, racedef, uma1, uma2).then(hash => {
+			const url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+			window.navigator.clipboard.writeText(url + '#' + hash);
+		});
+	}
 
 	const strings = {skillnames: {}, tracknames: TRACKNAMES_en};
 	const langid = +(props.lang == 'en');
@@ -169,6 +261,7 @@ function App(props) {
 						<label for="nsamples">Samples:</label>
 						<input type="number" id="nsamples" min="1" max="10000" value={nsamples} onInput={(e) => setSamples(+e.currentTarget.value)} />
 						<button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
+						<a href="#" onClick={copyStateUrl}>Copy link</a>
 					</div>
 					<div id="buttonsRow">
 						<TrackSelect courseid={courseId} setCourseid={setCourseId} tabindex={2} />

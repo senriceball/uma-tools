@@ -42,10 +42,33 @@ export function UmaSelector(props) {
 	const u = props.value && umas[props.value.slice(0,4)];
 	// TODO write my own autocomplete component that lets you do basic things like pass a tab index to it
 	useEffect(() => document.getElementById(inputId).tabIndex = props.tabindex, [props.tabindex]);
+	useEffect(function () {
+		// AHAHAHA IM LOSING MY GOD DAMN MIND AHAHA
+		// CANT EVEN MODIFY THE DAMN SOURCE TO FIX THE THING, NOT SURE WHY
+		// SPENT SO MUCH TIME ON THIS GOD AWFUL AUTOCOMPLETE COMPONENT WHAT A MISTAKE
+		if (u) window.requestAnimationFrame(() => {
+			(document.getElementById(inputId) as HTMLInputElement).value = u.name[1];
+			window.requestAnimationFrame(function hahalolxd() {
+				const e = document.getElementById(inputId + '__listbox');
+				if (e.classList.contains('autocomplete__menu--visible')) {
+					e.classList.replace('autocomplete__menu--visible', 'autocomplete__menu--hidden');
+					e.blur();
+				}
+				else window.requestAnimationFrame(hahalolxd);
+			});
+		});
+	}, [props.value]);
 	function focus() {
 		const input = document.getElementById(inputId) as HTMLInputElement;
 		input.select();
 		input.click();
+		// THIS DID IN FACT DRIVE ME TO MADNESS HOW COULD YOU GUESS
+		window.requestAnimationFrame(function fuckeverything() {
+			const e = document.getElementById(inputId + '__listbox');
+			if (e.classList.contains('autocomplete__menu--hidden')) {
+				e.classList.replace('autocomplete__menu--hidden', 'autocomplete__menu--visible');
+			}
+		});
 	}
 	return (
 		<div class="umaSelector">
@@ -136,6 +159,7 @@ function uniqueSkillForUma(oid: typeof umaAltIds[number]): keyof typeof skills {
 }
 
 export class HorseState extends Record({
+	outfitId: '',
 	speed: 1850,
 	stamina: 1200,
 	power: 1500,
@@ -155,7 +179,6 @@ export function horseDefTabs() {
 
 export function HorseDef(props) {
 	const {state, setState} = props;
-	const [umaId, setUmaId] = useState('');
 	const [skillPickerOpen, setSkillPickerOpen] = useState(false);
 	const [expanded, setExpanded] = useState(() => ImmSet());
 
@@ -166,6 +189,7 @@ export function HorseDef(props) {
 		return tabstart + tabi - 1;
 	}
 
+	const umaId = state.outfitId;
 	const selectableSkills = useMemo(() => nonUniqueSkills.filter(id => skills[id].rarity != 6 || id.startsWith(umaId)), [umaId]);
 
 	function setter(prop: keyof HorseState) {
@@ -174,8 +198,10 @@ export function HorseDef(props) {
 	const setSkills = setter('skills');
 
 	function setUma(id) {
-		setUmaId(id);
-		setSkills(state.skills.filter(id => skills[id].rarity != 6).delete(uniqueSkillForUma(umaId)).add(uniqueSkillForUma(id)));
+		setState(
+			state.set('outfitId', id)
+				.set('skills', state.skills.filter(id => skills[id].rarity < 3).add(uniqueSkillForUma(id)))
+		);
 	}
 
 	function openSkillPicker(e) {
