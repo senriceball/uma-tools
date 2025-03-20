@@ -1,10 +1,13 @@
 import { h, render } from 'preact';
-import { useState, useMemo, useEffect } from 'preact/hooks';
+import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
+import { Record } from 'immutable';
+import * as d3 from 'd3';
 
 import { CourseHelpers } from '../uma-skill-tools/CourseData';
 import { RaceSolver } from '../uma-skill-tools/RaceSolver';
 import { RaceSolverBuilder } from '../uma-skill-tools/RaceSolverBuilder';
+import { Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skill-tools/RaceParameters';
 
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
 import { SkillList, Skill } from '../components/SkillList';
@@ -16,11 +19,98 @@ import skillnames from '../uma-skill-tools/data/skillnames.json';
 
 import './app.css';
 
+function id(x) { return x; }
+
+function GroundSelect(props) {
+	return (
+		<select class="groundSelect" value={props.value} onInput={(e) => props.set(+e.currentTarget.value)}>
+			<option value="1">良</option>
+			<option value="2">稍重</option>
+			<option value="3">重</option>
+			<option value="4">不良</option>
+		</select>
+	);
+}
+
+function WeatherSelect(props) {
+	function click(e) {
+		e.stopPropagation();
+		if (!('weather' in e.target.dataset)) return;
+		props.set(+e.target.dataset.weather);
+	}
+	return (
+		<div class="weatherSelect" onClick={click}>
+			{Array(4).fill(0).map((_,i) =>
+				<img src={`/uma-tools/icons/utx_ico_weather_0${i}.png`}
+					class={i+1 == props.value ? 'selected' : ''} data-weather={i+1} />)}
+		</div>
+	);
+}
+
+function SeasonSelect(props) {
+	function click(e) {
+		e.stopPropagation();
+		if (!('season' in e.target.dataset)) return;
+		props.set(+e.target.dataset.season);
+	}
+	return (
+		<div class="seasonSelect" onClick={click}>
+			{Array(5).fill(0).map((_,i) =>
+				<img src={`/uma-tools/icons/utx_txt_season_0${i}.png`}
+					class={i+1 == props.value ? 'selected' : ''} data-season={i+1} />)}
+		</div>
+	);
+}
+
+function Histogram(props) {
+	const {data, width, height} = props;
+	const axes = useRef(null);
+	const xH = 20;
+	const yW = 40;
+
+	const x = d3.scaleLinear().domain([0,Math.ceil(data[data.length-1])]).range([yW,width-yW]);
+	const bucketize = d3.bin().value(id).domain(x.domain()).thresholds(x.ticks(30));
+	const buckets = bucketize(data);
+	const y = d3.scaleLinear().domain([0,d3.max(buckets, b => b.length)]).range([height-xH,xH]);
+
+	useEffect(function () {
+		const g = d3.select(axes.current);
+		g.selectAll('*').remove();
+		g.append('g').attr('transform', `translate(0,${height - xH})`).call(d3.axisBottom(x));
+		g.append('g').attr('transform', `translate(${yW},0)`).call(d3.axisLeft(y));
+	}, [data, width, height]);
+
+	const rects = buckets.map((b,i) =>
+		<rect key={i} fill="#2a77c5" stroke="black" x={x(b.x0)} y={y(b.length)} width={x(b.x1) - x(b.x0)} height={height - xH - y(b.length)} />
+	);
+	return (
+		<svg id="histogram" width={width} height={height}>
+			<g>{rects}</g>
+			<g ref={axes}></g>
+		</svg>
+	);
+}
+
+class RaceParams extends Record({
+	mood: 2 as Mood,
+	ground: GroundCondition.Good,
+	weather: Weather.Sunny,
+	season: Season.Spring,
+	time: Time.Midday,
+	grade: Grade.G1
+}) {}
+
 function App(props) {
 	//const [language, setLanguage] = useLanguageSelect();
 	const [courseId, setCourseId] = useState(10101);
 	const [skillsOpen, setSkillsOpen] = useState(false);
 	const [results, setResults] = useState([]);
+	const [racedef, setRaceDef] = useState(() => new RaceParams());
+	const [nsamples, setSamples] = useState(2000);
+
+	function racesetter(prop) {
+		return (value) => setRaceDef(racedef.set(prop, value));
+	}
 
 	const course = useMemo(() => CourseHelpers.getCourse(courseId), [courseId]);
 
@@ -32,17 +122,21 @@ function App(props) {
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
 	function doComparison() {
-		const nsamples = 2000;
 		const base = new RaceSolverBuilder(nsamples)
+			.seed(2615953739)
 			.course(course)
-			.seed(2615953739);
+			.mood(racedef.mood)
+			.ground(racedef.ground)
+			.weather(racedef.weather)
+			.season(racedef.season)
+			.time(racedef.time);
 		const compare = base.fork();
 		base.horse(uma1);
 		compare.horse(uma2);
 		uma1.skills.forEach(id => base.addSkill(id));
 		uma2.skills.forEach(id => compare.addSkill(id));
-		base.withAsiwotameru();
-		compare.withAsiwotameru();
+		base.withAsiwotameru(); base.useDefaultPacer();
+		compare.withAsiwotameru(); compare.useDefaultPacer();
 		const a = base.build(), b = compare.build();
 		const diff = [];
 		for (let i = 0; i < nsamples; ++i) {
@@ -64,7 +158,7 @@ function App(props) {
 
 	const mid = Math.floor(results.length / 2);
 	const median = results.length % 2 == 0 ? (results[mid-1] + results[mid]) / 2 : results[mid];
-	const mean = results.reduce((a,b) => a+b) / results.length;
+	const mean = results.reduce((a,b) => a+b, 0) / results.length;
 
 	return (
 		<Language.Provider value={props.lang}>
@@ -72,10 +166,16 @@ function App(props) {
 				<div id="topPane">
 					<RaceTrack courseid={courseId} width="960" height="220" />
 					<div id="runPane">
+						<label for="nsamples">Samples:</label>
+						<input type="number" id="nsamples" min="1" max="10000" value={nsamples} onInput={(e) => setSamples(+e.currentTarget.value)} />
 						<button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
 					</div>
 					<div id="buttonsRow">
 						<TrackSelect courseid={courseId} setCourseid={setCourseId} tabindex={2} />
+						<div id="buttonsRowSpace" />
+						<GroundSelect value={racedef.ground} set={racesetter('ground')} />
+						<WeatherSelect value={racedef.weather} set={racesetter('weather')} />
+						<SeasonSelect value={racedef.season} set={racesetter('season')} />
 					</div>
 				</div>
 				{results.length > 0 &&
@@ -91,15 +191,14 @@ function App(props) {
 							</tfoot>
 							<tbody>
 								<tr>
-									<th>{results[0].toFixed(2)}</th>
-									<th>{results[results.length-1].toFixed(2)}</th>
-									<th>{mean.toFixed(2)}</th>
-									<th>{median.toFixed(2)}</th>
+									<th>{results[0].toFixed(2)}<span class="unit-basinn">バ身</span></th>
+									<th>{results[results.length-1].toFixed(2)}<span class="unit-basinn">バ身</span></th>
+									<th>{mean.toFixed(2)}<span class="unit-basinn">バ身</span></th>
+									<th>{median.toFixed(2)}<span class="unit-basinn">バ身</span></th>
 								</tr>
 							</tbody>
 						</table>
-						<div id="histogram">
-						</div>
+						<Histogram width={500} height={333} data={results} />
 					</div>
 				}
 				<div id="experimentsWrapper">

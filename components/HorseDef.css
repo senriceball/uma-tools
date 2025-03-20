@@ -286,8 +286,7 @@
 	align-items: center;
 	background: white;
 	border: 1px solid rgb(224, 214, 204);
-	color: black;
-	display: flex;
+	color: rgb(121, 64, 22);
 }
 
 .addSkillButton > span {

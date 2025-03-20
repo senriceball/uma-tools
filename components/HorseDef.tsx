@@ -96,6 +96,7 @@ export function AptitudeIcon(props) {
 export function AptitudeSelect(props){
 	const [open, setOpen] = useState(false);
 	function setAptitude(e) {
+		e.stopPropagation();
 		props.setA(e.currentTarget.dataset.horseAptitude);
 		setOpen(false);
 	}

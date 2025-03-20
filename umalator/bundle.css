@@ -557,8 +557,7 @@
   align-items: center;
   background: white;
   border: 1px solid rgb(224, 214, 204);
-  color: black;
-  display: flex;
+  color: rgb(121, 64, 22);
 }
 .addSkillButton > span {
   font-size: 2em;
@@ -713,6 +712,22 @@
 #topPane {
   display: grid;
   grid-template-columns: 960px auto;
+  margin: 0 auto;
+  width: fit-content;
+}
+#runPane {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 50px;
+}
+#run {
+  background: none;
+  border: 1px solid rgb(148, 150, 189);
+  border-radius: 8px;
+  font-size: 1.6em;
+  margin-top: 10px;
+  padding: 24px;
 }
 #experimentsWrapper {
   display: grid;
@@ -722,7 +737,10 @@
   width: 1468px;
 }
 #buttonsRow {
-  margin: auto;
+  align-items: center;
+  display: flex;
+  gap: 0 50px;
+  margin-bottom: 10px;
   position: relative;
   width: 960px;
 }
@@ -735,4 +753,53 @@
 .trackSelect > select:first-child {
   border-radius: 8px 0 0 8px;
   border-right: none;
+}
+#buttonsRowSpace {
+  flex: 1;
+}
+.groundSelect {
+  background: inherit;
+  border: none;
+  color: rgb(121, 64, 22);
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: right;
+}
+.weatherSelect,
+.seasonSelect {
+  display: flex;
+}
+#buttonsRow img {
+  height: 2em;
+}
+#buttonsRow img:not(.selected) {
+  filter: grayscale(0.9);
+}
+#resultsPane {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 20px auto;
+  width: fit-content;
+}
+#resultsSummary {
+  border-spacing: 15px 0;
+}
+#resultsSummary > tfoot th {
+  color: rgb(121, 64, 22);
+  font-size: 0.9em;
+}
+#resultsSummary > tbody th {
+  background: rgb(248, 248, 248);
+  border: 2px solid rgb(224, 214, 204);
+  border-radius: 100px;
+  color: rgb(121, 64, 22);
+  font-size: 2em;
+  font-weight: normal;
+  line-height: 0.8em;
+  padding: 36px 20px 20px 20px;
+}
+#resultsSummary .unit-basinn {
+  display: block;
+  font-size: 0.5em;
 }
