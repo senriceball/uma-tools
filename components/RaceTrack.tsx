@@ -103,10 +103,10 @@ export function TrackSelect(props) {
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<div class="trackSelect">
-				<select value={trackid} onChange={changeTrack}>
+				<select value={trackid} onChange={changeTrack} tabindex={props.tabindex}>
 					{Object.keys(tracknames).map(tid => <option value={tid}><Text id={`tracknames.${tid}`} /></option>)}
 				</select>
-				<select value={props.courseid} onChange={changeCourse}>
+				<select value={props.courseid} onChange={changeCourse} tabindex={props.tabindex + 1}>
 					{coursesByTrack[trackid].map(cid =>
 						<option value={cid}>
 							<Text id="coursedesc" plural={courses[cid].surface} fields={{

@@ -202,6 +202,7 @@ export function Skill(props) {
 		<div class={`skill ${classnames[skills[props.id].rarity]} ${props.selected ? 'selected' : ''}`} data-skillid={props.id}>
 			<img class="skillIcon" src={`/uma-tools/icons/${skillmeta(props.id).iconId}.png`} /> 
 			<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
+			{props.dismissable && <span class="skillDismiss">✕</span>}
 		</div>
 	);
 }
@@ -375,8 +376,11 @@ export function ExpandedSkillDetails(props) {
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<div class={`expandedSkill ${classnames[skill.rarity]}`} data-skillid={props.id}>
-				<img class="skillIcon" src={`/uma-tools/icons/${skillmeta(props.id).iconId}.png`} /> 
-				<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
+				<div class="expandedSkillHeader">
+					<img class="skillIcon" src={`/uma-tools/icons/${skillmeta(props.id).iconId}.png`} />
+					<span class="skillName"><Text id={`skillnames.${props.id}`} /></span>
+					{props.dismissable && <span class="skillDismiss">✕</span>}
+				</div>
 				<div class="skillDetails">
 					{skills[props.id].alternatives.map(alt =>
 						<div class="skillDetailsSection">

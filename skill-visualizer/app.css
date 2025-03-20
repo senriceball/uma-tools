@@ -11,6 +11,11 @@
 	width: 85%;
 }
 
+.skillDetailsList .expandedSkill {
+	margin: 10px;
+	width: 19.3em;
+}
+
 .expandedSkillColorMarker {
 	height: 5px;
 	margin: 0 12px;
