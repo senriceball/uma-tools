@@ -627,7 +627,6 @@ body {
 #buttonsRow {
   align-items: center;
   display: flex;
-  gap: 0 50px;
   margin-bottom: 10px;
   position: relative;
   width: 960px;
@@ -653,9 +652,13 @@ body {
   font-weight: bold;
   text-align: right;
 }
-.weatherSelect,
+.weatherSelect {
+  display: flex;
+  margin-left: 5px;
+}
 .seasonSelect {
   display: flex;
+  margin-left: 50px;
 }
 #buttonsRow img {
   height: 2em;
