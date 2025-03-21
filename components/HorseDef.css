@@ -2,6 +2,7 @@
 	background: rgb(248, 248, 248);
 	border: 2px solid rgb(170, 221, 154);
 	border-radius: 12px;
+	box-sizing: border-box;
 	width: 700px;
 }
 

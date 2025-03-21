@@ -209,6 +209,14 @@ function App(props) {
 		});
 	}
 
+	function copyUmaToRight() {
+		setUma2(uma1);
+	}
+
+	function copyUmaToLeft() {
+		setUma1(uma2);
+	}
+
 	const strings = {skillnames: {}, tracknames: TRACKNAMES_en};
 	const langid = +(props.lang == 'en');
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
@@ -296,6 +304,10 @@ function App(props) {
 				}
 				<div id="experimentsWrapper">
 					<HorseDef key={uma1.outfitId} title="Umamusume 1" state={uma1} setState={setUma1} courseDistance={course.distance} tabstart={() => 4} />
+					<div id="copyUmaButtons">
+						<div id="copyUmaToRight" onClick={copyUmaToRight} />
+						<div id="copyUmaToLeft" onClick={copyUmaToLeft} />
+					</div>
 					<HorseDef key={uma2.outfitId} title="Umamusume 2" state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4 + horseDefTabs()} />
 				</div>
 			</IntlProvider>
