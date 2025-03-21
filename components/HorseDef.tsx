@@ -34,9 +34,9 @@ export function UmaSelector(props) {
 	const input = useRef(null);
 	const suggestionsContainer = useRef(null);
 	const [open, setOpen] = useState(false);
-	const [suggestions, setSuggestions] = useState(umaAltIds);
 	const [activeIdx, setActiveIdx] = useState(-1);
 	const [query, setQuery] = useState(u && u.name[1]);
+	const [suggestions, setSuggestions] = useState(() => searchNames(u && u.name[1]));
 
 	function confirm(oid) {
 		setOpen(false);
