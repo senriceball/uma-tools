@@ -69,7 +69,7 @@ function Histogram(props) {
 	const xH = 20;
 	const yW = 40;
 
-	const x = d3.scaleLinear().domain([0,Math.ceil(data[data.length-1])]).range([yW,width-yW]);
+	const x = d3.scaleLinear().domain([Math.min(0,Math.floor(data[0])),Math.ceil(data[data.length-1])]).range([yW,width-yW]);
 	const bucketize = d3.bin().value(id).domain(x.domain()).thresholds(x.ticks(30));
 	const buckets = bucketize(data);
 	const y = d3.scaleLinear().domain([0,d3.max(buckets, b => b.length)]).range([height-xH,xH]);
