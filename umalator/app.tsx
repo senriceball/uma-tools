@@ -264,7 +264,7 @@ function App(props) {
 						<a href="#" onClick={copyStateUrl}>Copy link</a>
 					</div>
 					<div id="buttonsRow">
-						<TrackSelect courseid={courseId} setCourseid={setCourseId} tabindex={2} />
+						<TrackSelect key={courseId} courseid={courseId} setCourseid={setCourseId} tabindex={2} />
 						<div id="buttonsRowSpace" />
 						<GroundSelect value={racedef.ground} set={racesetter('ground')} />
 						<WeatherSelect value={racedef.weather} set={racesetter('weather')} />
