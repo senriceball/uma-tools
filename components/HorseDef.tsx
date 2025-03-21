@@ -196,6 +196,10 @@ function skillComparator(a, b) {
 	return x > y ? 1 : y > x ? -1 : +(b < a) - +(a < b);
 }
 
+export function SkillSet(iterable): SortedSet<keyof typeof skills> {
+	return SortedSet(iterable, skillComparator);
+}
+
 export class HorseState extends Record({
 	outfitId: '',
 	speed: 1850,
@@ -207,7 +211,7 @@ export class HorseState extends Record({
 	distanceAptitude: 'S',
 	surfaceAptitude: 'A',
 	strategyAptitude: 'A',
-	skills: SortedSet<keyof typeof skills>([], skillComparator)
+	skills: SkillSet([])
 }) {}
 
 let totalTabs = 0;
@@ -248,7 +252,7 @@ export function HorseDef(props) {
 	}
 
 	function setSkillsAndClose(ids) {
-		setSkills(SortedSet(ids, skillComparator));
+		setSkills(SkillSet(ids));
 		setSkillPickerOpen(false);
 	}
 

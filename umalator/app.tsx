@@ -2,7 +2,6 @@ import { h, render } from 'preact';
 import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 import { Record } from 'immutable';
-import { SortedSet } from 'immutable-sorted';
 import * as d3 from 'd3';
 
 import { CourseHelpers } from '../uma-skill-tools/CourseData';
@@ -13,7 +12,7 @@ import { Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skil
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
 import { SkillList, Skill } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
-import { HorseState, HorseDef, horseDefTabs } from '../components/HorseDef';
+import { HorseState, SkillSet, HorseDef, horseDefTabs } from '../components/HorseDef';
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common.ts';
 
 import skillnames from '../uma-skill-tools/data/skillnames.json';
@@ -158,8 +157,8 @@ async function deserialize(hash) {
 					courseId: o.courseId,
 					nsamples: o.nsamples,
 					racedef: new RaceParams(o.racedef),
-					uma1: new HorseState(o.uma1).set('skills', SortedSet(o.uma1.skills)),
-					uma2: new HorseState(o.uma2).set('skills', SortedSet(o.uma2.skills))
+					uma1: new HorseState(o.uma1).set('skills', SkillSet(o.uma1.skills)),
+					uma2: new HorseState(o.uma2).set('skills', SkillSet(o.uma2.skills))
 				};
 			} catch (_) {
 				return {
