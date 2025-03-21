@@ -465,6 +465,7 @@
   margin: 0 25px;
 }
 .horseAptitudes > div {
+  align-items: center;
   border: 2px solid rgb(224, 214, 204);
   border-radius: 6px;
   background: white;
@@ -589,6 +590,20 @@
 }
 
 /* app.css */
+@font-face {
+  font-family: "Inter";
+  src: local("Inter"), url(/uma-tools/fonts/Inter-VariableFont_opsz,wght.ttf) format("truetype");
+}
+@font-face {
+  font-family: "Noto Sans JP";
+  src: local("Noto Sans JP"), url(/uma-tools/fonts/NotoSansJP-VariableFont_wght.ttf) format("truetype");
+}
+body {
+  font-family:
+    Inter,
+    "Noto Sans JP",
+    sans-serif;
+}
 #topPane {
   display: grid;
   grid-template-columns: 960px auto;
