@@ -70,6 +70,7 @@ const STRINGS_ja = Object.freeze({
 		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'デビュー', 999: '毎日'}),
 		'ground_condition': Object.freeze(['', '良', '稍重', '重', '不良']),
 		'ground_type': Object.freeze(['', '芝', 'ダート']),
+		'id': 'ID: ',
 		'meters': '{{n}}m',
 		'motivation': Object.freeze(['', '絶不調', '不調', '普通', '好調', '絶好調']),
 		'order_rate': 'チャンミ：{{cm}}、リグヒ：{{loh}}',
@@ -134,6 +135,7 @@ const STRINGS_en = Object.freeze({
 		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'Debut', 999: 'Daily races'}),
 		'ground_condition': Object.freeze(['', 'Good', 'Yielding', 'Soft', 'Heavy']),
 		'ground_type': Object.freeze(['', 'Turf', 'Dirt']),
+		'id': 'ID: ',
 		'meters': '{{n}}m',
 		'motivation': Object.freeze(['', 'Terrible', 'Bad', 'Normal', 'Good', 'Perfect']),
 		'order_rate': 'CM: {{cm}}, LOH: {{loh}}',
@@ -384,6 +386,10 @@ export function ExpandedSkillDetails(props) {
 				<div class="skillDetails">
 					{skills[props.id].alternatives.map(alt =>
 						<div class="skillDetailsSection">
+							<div>
+								<Text id="skilldetails.id" />
+								{props.id}
+							</div>
 							{alt.precondition.length > 0 && <Fragment>
 								<Text id="skilldetails.preconditions" />
 								<div class="skillConditions">
