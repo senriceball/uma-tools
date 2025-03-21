@@ -1,5 +1,5 @@
 import { h, Fragment } from 'preact';
-import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
+import { useState, useReducer, useMemo, useEffect, useRef } from 'preact/hooks';
 import { IntlProvider, Text, Localizer } from 'preact-i18n';
 import { Record, Set as ImmSet } from 'immutable';
 import { SortedSet } from 'immutable-sorted';
@@ -35,15 +35,16 @@ export function UmaSelector(props) {
 	const suggestionsContainer = useRef(null);
 	const [open, setOpen] = useState(false);
 	const [activeIdx, setActiveIdx] = useState(-1);
-	const [query, setQuery] = useState(u && u.name[1]);
-	const [suggestions, setSuggestions] = useState(() => searchNames(u && u.name[1]));
+	function update(q) {
+		return {input: q, suggestions: searchNames(q)};
+	}
+	const [query, search] = useReducer((_,q) => update(q), u && u.name[1], update);
 
 	function confirm(oid) {
 		setOpen(false);
 		props.select(oid);
 		const uname = umas[oid.slice(0,4)].name[1];
-		setQuery(uname);
-		setSuggestions(searchNames(uname));
+		search(uname);
 		setActiveIdx(-1);
 		input.current && input.current.blur();
 	}
@@ -56,7 +57,7 @@ export function UmaSelector(props) {
 		setActiveIdx(idx);
 		if (!suggestionsContainer.current) return;
 		const container = suggestionsContainer.current;
-		const li = container.querySelector(`[data-uma-id="${suggestions[idx]}"]`);
+		const li = container.querySelector(`[data-uma-id="${query.suggestions[idx]}"]`);
 		const ch = container.offsetHeight - 4;  // 4 for borders
 		if (li.offsetTop < container.scrollTop) {
 			container.scrollTop = li.offsetTop;
@@ -75,20 +76,20 @@ export function UmaSelector(props) {
 
 	function handleInput(e) {
 		const q = e.target.value;
-		setQuery(q);
-		setSuggestions(searchNames(q));
+		search(e.target.value);
 	}
 
 	function handleKeyDown(e) {
+		const l = query.suggestions.length;
 		switch (e.keyCode) {
 			case 13:
-				if (activeIdx > -1) confirm(suggestions[activeIdx]);
+				if (activeIdx > -1) confirm(query.suggestions[activeIdx]);
 				break;
 			case 38:
-				setActiveAndScroll(Math.max(0, activeIdx - 1));
+				setActiveAndScroll((activeIdx - 1 + l) % l);
 				break;
 			case 40:
-				setActiveAndScroll(Math.min(activeIdx + 1, suggestions.length - 1));
+				setActiveAndScroll((activeIdx + 1 + l) % l);
 				break;
 		}
 	}
@@ -101,9 +102,9 @@ export function UmaSelector(props) {
 			</div>
 			<div class="umaEpithet"><span>{props.value && u.outfits[props.value]}</span></div>
 			<div class="umaSelectWrapper">
-				<input type="text" class="umaSelectInput" value={query} tabindex={props.tabindex} onInput={handleInput} onKeyDown={handleKeyDown} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} ref={input} />
+				<input type="text" class="umaSelectInput" value={query.input} tabindex={props.tabindex} onInput={handleInput} onKeyDown={handleKeyDown} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} ref={input} />
 				<ul class={`umaSuggestions ${open ? 'open' : ''}`} onMouseDown={handleClick} ref={suggestionsContainer}>
-					{suggestions.map((oid, i) => {
+					{query.suggestions.map((oid, i) => {
 						const uid = oid.slice(0,4);
 						return (
 							<li key={oid} data-uma-id={oid} class={`umaSuggestion ${i == activeIdx ? 'selected' : ''}`}>
@@ -193,7 +194,7 @@ function uniqueSkillForUma(oid: typeof umaAltIds[number]): keyof typeof skills {
 
 function skillComparator(a, b) {
 	const x = skill_meta[a].order, y = skill_meta[b].order;
-	return x > y ? 1 : y > x ? -1 : +(b < a) - +(a < b);
+	return +(y < x) - +(x < y) || +(b < a) - +(a < b);
 }
 
 export function SkillSet(iterable): SortedSet<keyof typeof skills> {
