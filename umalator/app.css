@@ -39,7 +39,7 @@ body {
 	display: grid;
 	gap: 60px;
 	grid-template-columns: repeat(2, 704px);
-	margin: 0 auto;
+	margin: 8px auto 0 auto;
 	width: 1468px;
 }
 
@@ -113,8 +113,10 @@ body {
 	color: rgb(121, 64, 22);
 	font-size: 2em;
 	font-weight: normal;
+	height: 64px;
 	line-height: 0.8em;
 	padding: 36px 20px 20px 20px;
+	width: 80px;
 }
 
 #resultsSummary .unit-basinn {

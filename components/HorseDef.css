@@ -66,6 +66,7 @@
 	font-size: 1.4em;
 	font-weight: bold;
 	text-align: center;
+	width: 100%;
 }
 
 .umaSuggestions {
@@ -260,7 +261,7 @@
 .horseSkillListWrapper {
 	background: rgb(242, 242, 242);
 	border-radius: 4px;
-	margin: 0 6px;
+	margin: 0 6px 6px 6px;
 }
 
 .horseSkillList {

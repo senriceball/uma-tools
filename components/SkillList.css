@@ -65,8 +65,6 @@
 	color: rgb(121,64,22);
 	display: flex;
 	flex: 1;
-	font: 1em/2.5em bold sans-serif;
-	height: 2.5em;
 	text-stroke: 1px rgb(121,64,22);
 	-webkit-text-stroke: 1px rgb(121,64,22);
 	text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
