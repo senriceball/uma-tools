@@ -1,16 +1,14 @@
 import { h, Fragment } from 'preact';
-import { useState, useMemo, useEffect, useId } from 'preact/hooks';
+import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { IntlProvider, Text, Localizer } from 'preact-i18n';
-import Autocomplete from 'accessible-autocomplete/preact';
 import { Record, Set as ImmSet } from 'immutable';
 import { SortedSet } from 'immutable-sorted';
 
 import { SkillList, Skill, ExpandedSkillDetails } from '../components/SkillList';
 
-import { HorseParameters } from '../uma-skill-tools/HorseTypes.ts';
+import { HorseParameters } from '../uma-skill-tools/HorseTypes';
 
 import './HorseDef.css';
-import '../node_modules/accessible-autocomplete/dist/accessible-autocomplete.min.css';
 
 import umas from '../umas.json';
 import icons from '../icons.json';
@@ -22,54 +20,78 @@ umaAltIds.forEach(id => {
 	const u = umas[id.slice(0,4)];
 	umaNamesForSearch[id] = (u.outfits[id] + ' ' + u.name[1]).toUpperCase().replace(/\./g, '');
 });
-function suggestUma(query, populateResults) {
+
+function searchNames(query) {
 	const q = query.toUpperCase().replace(/\./g, '');
-	populateResults(umaAltIds.filter((k) => umaNamesForSearch[k].indexOf(q) > -1));
-}
-
-function renderSelection(oid) {
-	return oid ? umas[oid.slice(0,4)].name[1] : '';
-}
-
-function renderSuggestion(oid) {
-	const uid = oid.slice(0,4);
-	return `<div class="umaSuggestion"><img src="${icons[uid]}"><span>${umas[uid].outfits[oid]} ${umas[uid].name[1]}</span></div>`;
+	return umaAltIds.filter(oid => umaNamesForSearch[oid].indexOf(q) > -1);
 }
 
 export function UmaSelector(props) {
-	const inputId = useId();
 	const randomMob = useMemo(() => `/uma-tools/icons/mob/trained_mob_chr_icon_${8000 + Math.floor(Math.random() * 624)}_000001_01.png`, []);
 	const u = props.value && umas[props.value.slice(0,4)];
-	// TODO write my own autocomplete component that lets you do basic things like pass a tab index to it
-	useEffect(() => document.getElementById(inputId).tabIndex = props.tabindex, [props.tabindex]);
-	useEffect(function () {
-		// AHAHAHA IM LOSING MY GOD DAMN MIND AHAHA
-		// CANT EVEN MODIFY THE DAMN SOURCE TO FIX THE THING, NOT SURE WHY
-		// SPENT SO MUCH TIME ON THIS GOD AWFUL AUTOCOMPLETE COMPONENT WHAT A MISTAKE
-		if (u) window.requestAnimationFrame(() => {
-			(document.getElementById(inputId) as HTMLInputElement).value = u.name[1];
-			window.requestAnimationFrame(function hahalolxd() {
-				const e = document.getElementById(inputId + '__listbox');
-				if (e.classList.contains('autocomplete__menu--visible')) {
-					e.classList.replace('autocomplete__menu--visible', 'autocomplete__menu--hidden');
-					e.blur();
-				}
-				else window.requestAnimationFrame(hahalolxd);
-			});
-		});
-	}, [props.value]);
-	function focus() {
-		const input = document.getElementById(inputId) as HTMLInputElement;
-		input.select();
-		input.click();
-		// THIS DID IN FACT DRIVE ME TO MADNESS HOW COULD YOU GUESS
-		window.requestAnimationFrame(function fuckeverything() {
-			const e = document.getElementById(inputId + '__listbox');
-			if (e.classList.contains('autocomplete__menu--hidden')) {
-				e.classList.replace('autocomplete__menu--hidden', 'autocomplete__menu--visible');
-			}
-		});
+
+	const input = useRef(null);
+	const suggestionsContainer = useRef(null);
+	const [open, setOpen] = useState(false);
+	const [suggestions, setSuggestions] = useState(umaAltIds);
+	const [activeIdx, setActiveIdx] = useState(-1);
+	const [query, setQuery] = useState(u && u.name[1]);
+
+	function confirm(oid) {
+		setOpen(false);
+		props.select(oid);
+		const uname = umas[oid.slice(0,4)].name[1];
+		setQuery(uname);
+		setSuggestions(searchNames(uname));
+		setActiveIdx(-1);
+		input.current && input.current.blur();
 	}
+
+	function focus() {
+		input.current && input.current.select();
+	}
+
+	function setActiveAndScroll(idx) {
+		setActiveIdx(idx);
+		if (!suggestionsContainer.current) return;
+		const container = suggestionsContainer.current;
+		const li = container.querySelector(`[data-uma-id="${suggestions[idx]}"]`);
+		const ch = container.offsetHeight - 4;  // 4 for borders
+		if (li.offsetTop < container.scrollTop) {
+			container.scrollTop = li.offsetTop;
+		} else if (li.offsetTop >= container.scrollTop + ch) {
+			const h = li.offsetHeight;
+			container.scrollTop = (li.offsetTop / h - (ch / h - 1)) * h;
+		}
+	}
+
+	function handleClick(e) {
+		const li = e.target.closest('.umaSuggestion');
+		if (li == null) return;
+		e.stopPropagation();
+		confirm(li.dataset.umaId);
+	}
+
+	function handleInput(e) {
+		const q = e.target.value;
+		setQuery(q);
+		setSuggestions(searchNames(q));
+	}
+
+	function handleKeyDown(e) {
+		switch (e.keyCode) {
+			case 13:
+				if (activeIdx > -1) confirm(suggestions[activeIdx]);
+				break;
+			case 38:
+				setActiveAndScroll(Math.max(0, activeIdx - 1));
+				break;
+			case 40:
+				setActiveAndScroll(Math.min(activeIdx + 1, suggestions.length - 1));
+				break;
+		}
+	}
+
 	return (
 		<div class="umaSelector">
 			<div class="umaSelectorIconsBox" onClick={focus}>
@@ -77,9 +99,19 @@ export function UmaSelector(props) {
 				<img src="/uma-tools/icons/utx_ico_umamusume_00.png" />
 			</div>
 			<div class="umaEpithet"><span>{props.value && u.outfits[props.value]}</span></div>
-			<Autocomplete id={inputId} inputClasses="umaSelectInput" source={suggestUma}
-				showAllValues={true} confirmOnBlur={false} onConfirm={props.select}
-				templates={{suggestion: renderSuggestion, inputValue: renderSelection}} />
+			<div class="umaSelectWrapper">
+				<input type="text" class="umaSelectInput" value={query} tabindex={props.tabindex} onInput={handleInput} onKeyDown={handleKeyDown} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} ref={input} />
+				<ul class={`umaSuggestions ${open ? 'open' : ''}`} onMouseDown={handleClick} ref={suggestionsContainer}>
+					{suggestions.map((oid, i) => {
+						const uid = oid.slice(0,4);
+						return (
+							<li key={oid} data-uma-id={oid} class={`umaSuggestion ${i == activeIdx ? 'selected' : ''}`}>
+								<img src={icons[oid]} /><span>{umas[uid].outfits[oid]} {umas[uid].name[1]}</span>
+							</li>
+						);
+					})}
+				</ul>
+			</div>
 		</div>
 	);
 }

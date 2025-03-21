@@ -18,10 +18,9 @@
 
 .umaSelector {
 	display: grid;
-	grid-template-columns: 120px 320px;
+	grid-template-columns: 120px 360px;
 	grid-template-rows: repeat(2, 60px);
 	padding: 0 50px 10px 50px;
-	width: 600px;
 }
 
 .umaSelectorIconsBox {
@@ -53,7 +52,14 @@
 	margin: 0 auto;
 }
 
-.autocomplete__input.umaSelectInput {
+.umaSelectWrapper {
+	position: relative;
+	top: 0;
+	left: 0;
+}
+
+.umaSelectInput {
+	background: none;
 	border: none;
 	box-sizing: border-box;
 	color: rgb(121,64,22);
@@ -62,15 +68,36 @@
 	text-align: center;
 }
 
-.umaSelectInput.autocomplete__input--focused {
-	box-shadow: none;
-	outline: none;
+.umaSuggestions {
+	border: 2px solid rgb(224, 214, 204);
+	cursor: default;
+	display: none;
+	left: -2px;
+	list-style-type: none;
+	max-height: 320px;
+	overflow-y: auto;
+	padding: 0;
+	position: absolute;
+	top: 1em;
+	width: 420px;
+	z-index: 10;
 }
 
-.horseDef .autocomplete__menu {
-	border-top: 2px solid #0b0c0c;
-	width: 480px;
-	z-index: 10;
+.umaSuggestions.open {
+	display: block;
+}
+
+.umaSuggestion {
+	background: white;
+	padding: 4px;
+}
+
+.umaSuggestion:nth-child(even) {
+	background: rgb(242, 242, 242);
+}
+
+.umaSuggestion.selected, .umaSuggestion:hover {
+	background: rgb(0, 120, 215);
 }
 
 .umaSuggestion > img {
