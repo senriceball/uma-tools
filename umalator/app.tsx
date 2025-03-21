@@ -312,6 +312,7 @@ function App(props) {
 								</tr>
 							</tbody>
 						</table>
+						<div id="resultsHelp">Positive numbers mean <strong>right</strong> is faster, negative numbers mean <strong>left</strong> is faster.</div>
 						<Histogram width={500} height={333} data={results} />
 					</div>
 				}

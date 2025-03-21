@@ -89,6 +89,13 @@ body {
 	width: fit-content;
 }
 
+#resultsHelp {
+	color: rgb(121, 64, 22);
+	font-size: 0.7em;
+	margin-top: 0.5em;
+	text-align: center;
+}
+
 #resultsSummary {
 	border-spacing: 15px 0;
 }
