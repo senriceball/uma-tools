@@ -181,6 +181,7 @@
 }
 
 .horseAptitudes > div {
+	align-items: center;
 	border: 2px solid rgb(224, 214, 204);
 	border-radius: 6px;
 	background: white;
