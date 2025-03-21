@@ -6,7 +6,7 @@ make a best effort to save/estimate mean and median as well (e.g. using some (ap
 * TODO integrated bashin chart
 * TODO skill hints/cost calculator?
 * miscellany
-** TODO sort skills by disp_order from the db
+** DONE sort skills by disp_order from the db
 add to skill_meta.json
 ** TODO respond to url hash change events to load state
 i assume theres some kind of event for this

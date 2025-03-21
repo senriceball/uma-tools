@@ -13,6 +13,7 @@ import './HorseDef.css';
 import umas from '../umas.json';
 import icons from '../icons.json';
 import skills from '../uma-skill-tools/data/skill_data.json';
+import skill_meta from '../skill_meta.json';
 
 const umaAltIds = Object.keys(umas).flatMap(id => Object.keys(umas[id].outfits));
 const umaNamesForSearch = {};
@@ -190,6 +191,11 @@ function uniqueSkillForUma(oid: typeof umaAltIds[number]): keyof typeof skills {
 	return sid;
 }
 
+function skillComparator(a, b) {
+	const x = skill_meta[a].order, y = skill_meta[b].order;
+	return x > y ? 1 : y > x ? -1 : +(b < a) - +(a < b);
+}
+
 export class HorseState extends Record({
 	outfitId: '',
 	speed: 1850,
@@ -201,7 +207,7 @@ export class HorseState extends Record({
 	distanceAptitude: 'S',
 	surfaceAptitude: 'A',
 	strategyAptitude: 'A',
-	skills: SortedSet<keyof typeof skills>()
+	skills: SortedSet<keyof typeof skills>([], skillComparator)
 }) {}
 
 let totalTabs = 0;
@@ -242,7 +248,7 @@ export function HorseDef(props) {
 	}
 
 	function setSkillsAndClose(ids) {
-		setSkills(SortedSet(ids));
+		setSkills(SortedSet(ids, skillComparator));
 		setSkillPickerOpen(false);
 	}
 
