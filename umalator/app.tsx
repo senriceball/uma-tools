@@ -222,7 +222,9 @@ function App(props) {
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
 	function doComparison() {
-		const base = new RaceSolverBuilder(nsamples)
+		// * 2 because that's the worst case number of runs we have to do if we always guess wrong about
+		// which uma is slower
+		const standard = new RaceSolverBuilder(nsamples * 2)
 			.seed(2615953739)
 			.course(course)
 			.mood(racedef.mood)
@@ -230,27 +232,38 @@ function App(props) {
 			.weather(racedef.weather)
 			.season(racedef.season)
 			.time(racedef.time);
-		const compare = base.fork();
-		base.horse(uma1);
+		const compare = standard.fork();
+		standard.horse(uma1);
 		compare.horse(uma2);
-		uma1.skills.forEach(id => base.addSkill(id));
+		uma1.skills.forEach(id => standard.addSkill(id));
 		uma2.skills.forEach(id => compare.addSkill(id));
-		base.withAsiwotameru(); base.useDefaultPacer();
+		standard.withAsiwotameru(); standard.useDefaultPacer();
 		compare.withAsiwotameru(); compare.useDefaultPacer();
-		const a = base.build(), b = compare.build();
+		let a = standard.build(), b = compare.build();
+		let sign = 1;
 		const diff = [];
 		for (let i = 0; i < nsamples; ++i) {
 			const s1 = a.next().value as RaceSolver;
 			const s2 = b.next().value as RaceSolver;
 
-			while (s1.pos < course.distance) {
-				s1.step(1/15);
-			}
-			while (s2.accumulatetime.t < s1.accumulatetime.t) {
+			while (s2.pos < course.distance) {
 				s2.step(1/15);
 			}
+			while (s1.accumulatetime.t < s2.accumulatetime.t) {
+				s1.step(1/15);
+			}
 
-			diff.push((s1.pos - s2.pos) / 2.5);
+			// if `standard` is faster than `compare` then the former ends up going past the course distance
+			// this is not in itself a problem, but it would overestimate the difference if for example a skill
+			// continues past the end of the course. i feel like there are probably some other situations where it would
+			// be inaccurate also. if this happens we have to swap them around and run it again.
+			if (s2.pos < s1.pos) {
+				[b,a] = [a,b];
+				sign *= -1;
+				--i;  // this one didnt count
+			} else {
+				diff.push(sign * (s2.pos - s1.pos) / 2.5);
+			}
 		}
 		diff.sort((a,b) => a - b);
 		setResults(diff);
