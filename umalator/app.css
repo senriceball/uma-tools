@@ -39,6 +39,7 @@ body {
 	align-items: center;
 	display: flex;
 	margin-bottom: 10px;
+	margin-left: 20px;
 	position: relative;
 	width: 960px;
 }

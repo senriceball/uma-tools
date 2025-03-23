@@ -81,9 +81,9 @@ const coursesByTrack = (function () {
 	Object.keys(courses).forEach(cid => {
 		const tid = courses[cid].raceTrackId;
 		if (tid in o) {
-			o[tid].push(cid);
+			o[tid].push(+cid);
 		} else {
-			o[tid] = [cid];
+			o[tid] = [+cid];
 		}
 	});
 	return Object.freeze(o);
@@ -142,31 +142,38 @@ function SectionText(props) {
 	return <text class="sectionText" x="50%" y="50%" height="40%" width="100%" fill="rgb(121,64,22)"><Text id={`racetrack${props.w < 0.085 ? '.short' : ''}.${props.id}`} fields={props.fields} /></text>;
 }
 
-function doMouseMove(e) {
-	const svg = e.currentTarget;
-	const line = svg.querySelector('.mouseoverLine');
-	const text = svg.querySelector('.mouseoverText');
-	const w = svg.getBoundingClientRect().width;
-	line.setAttribute('x1', e.offsetX);
-	line.setAttribute('x2', e.offsetX);
-	text.setAttribute('x', e.offsetX > w - 45 ? e.offsetX - 45 : e.offsetX + 5);
-	text.setAttribute('y', e.offsetY);
-	text.textContent = Math.round(e.offsetX / w * courses[svg.dataset.courseid].distance) + 'm';
-}
-
-function doMouseLeave(e) {
-	const svg = e.currentTarget;
-	const line = svg.querySelector('.mouseoverLine');
-	const text = svg.querySelector('.mouseoverText');
-	line.setAttribute('x1', -5);
-	line.setAttribute('x2', -5);
-	text.setAttribute('x', -5);
-	text.setAttribute('y', -5);
-}
-
 export function RaceTrack(props) {
 	const lang = useLanguage();
 	const course = CourseHelpers.getCourse(props.courseid);
+
+	const xOffset = props.xOffset || 0, yOffset = props.yOffset || 0, xExtra = props.xExtra || 0, yExtra = props.yExtra || 0;
+
+	function doMouseMove(e) {
+		const svg = e.currentTarget;
+		if (e.offsetX < xOffset) return;
+		const line = svg.querySelector('.mouseoverLine');
+		const text = svg.querySelector('.mouseoverText');
+		const w = svg.getBoundingClientRect().width;
+		const x = e.offsetX - xOffset;
+		const y = e.offsetY - yOffset;
+		line.setAttribute('x1', x);
+		line.setAttribute('x2', x);
+		text.setAttribute('x', x > w - 45 ? x - 45 : x + 5);
+		text.setAttribute('y', y);
+		text.textContent = Math.round(x / w * courses[svg.dataset.courseid].distance) + 'm';
+		props.mouseMove && props.mouseMove(x / w);
+	}
+
+	function doMouseLeave(e) {
+		const svg = e.currentTarget;
+		const line = svg.querySelector('.mouseoverLine');
+		const text = svg.querySelector('.mouseoverText');
+		line.setAttribute('x1', -5);
+		line.setAttribute('x2', -5);
+		text.setAttribute('x', -5);
+		text.setAttribute('y', -5);
+		props.mouseLeave && props.mouseLeave();
+	}
 
 	const trackNameHeader = useMemo(() =>
 		<div class="racetrackName">
@@ -317,31 +324,34 @@ export function RaceTrack(props) {
 
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
-			<div class="racetrackWrapper" style={`width:${props.width}px`}>
+			<div class="racetrackWrapper" style={`width:${props.width + xOffset + xExtra}px`}>
 				{trackNameHeader}
-				<svg version="1.1" width={props.width} height={props.height} xmlns="http://www.w3.org/2000/svg" class="racetrackView" data-courseid={props.courseid} onMouseMove={doMouseMove} onMouseLeave={doMouseLeave}>
-					{almostEverything}
-					{props.regions && props.regions.reduce((state,desc) => {
-						if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
-							let x = desc.regions[0].start / course.distance * 100;
-							while (state.seen.has(x)) {
-								x += (3 + +(x == 0)) / props.width * 100;
+				<svg version="1.1" width={props.width + xOffset + xExtra} height={props.height + yOffset + yExtra} xmlns="http://www.w3.org/2000/svg" class="racetrackView" data-courseid={props.courseid} onMouseMove={doMouseMove} onMouseLeave={doMouseLeave}>
+					<svg x={props.xOffset} y={props.yOffset} width={props.width} height={props.height}>
+						{almostEverything}
+						{props.regions && props.regions.reduce((state,desc) => {
+							if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
+								let x = desc.regions[0].start / course.distance * 100;
+								while (state.seen.has(x)) {
+									x += (3 + +(x == 0)) / props.width * 100;
+								}
+								state.seen.add(x);
+								state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={x == 0 ? 4 : 2} />);
+							} else {
+								state.elem.push(
+									<Fragment>
+										{desc.regions.map(r =>
+											<rect x={`${r.start / course.distance * 100}%`} y="0" width={`${(r.end - r.start) / course.distance * 100}%`} height="100%" fill={desc.color.fill} stroke={desc.color.stroke} />
+										)}
+									</Fragment>
+								);
 							}
-							state.seen.add(x);
-							state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={x == 0 ? 4 : 2} />);
-						} else {
-							state.elem.push(
-								<Fragment>
-									{desc.regions.map(r =>
-										<rect x={`${r.start / course.distance * 100}%`} y="0" width={`${(r.end - r.start) / course.distance * 100}%`} height="100%" fill={desc.color.fill} stroke={desc.color.stroke} />
-									)}
-								</Fragment>
-							);
-						}
-						return state;
-					}, {seen: new Set(), elem: []}).elem}
-					<line class="mouseoverLine" x1="-5" y1="0" x2="-5" y2="100%" stroke="rgb(121,64,22)" stroke-width="2" />
-					<text class="mouseoverText" x="-5" y="-5" fill="rgb(121,64,22)"></text>
+							return state;
+						}, {seen: new Set(), elem: []}).elem}
+						<line class="mouseoverLine" x1="-5" y1="0" x2="-5" y2="100%" stroke="rgb(121,64,22)" stroke-width="2" />
+						<text class="mouseoverText" x="-5" y="-5" fill="rgb(121,64,22)"></text>
+					</svg>
+					{props.children}
 				</svg>
 			</div>
 		</IntlProvider>

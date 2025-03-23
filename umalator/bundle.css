@@ -612,6 +612,9 @@ body {
   margin: 0 auto;
   width: fit-content;
 }
+.racetrackWrapper {
+  margin-left: -20px;
+}
 #runPane {
   display: flex;
   flex-direction: column;

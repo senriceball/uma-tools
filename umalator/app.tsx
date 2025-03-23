@@ -1,5 +1,5 @@
-import { h, render } from 'preact';
-import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
+import { h, Fragment, render } from 'preact';
+import { useState, useReducer, useMemo, useEffect, useRef, useCallback } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 import { Record } from 'immutable';
 import * as d3 from 'd3';
@@ -95,6 +95,35 @@ function Histogram(props) {
 	);
 }
 
+function VelocityLines(props) {
+	const axes = useRef(null);
+	const data = props.data;
+	const x = data && d3.scaleLinear().domain([0,data.t[data.t.length-1]]).range([0,props.width]);
+	const y = d3.scaleLinear().domain([0,30]).range([props.height,0]);
+	useEffect(function () {
+		if (axes.current == null) return;
+		const g = d3.select(axes.current);
+		g.selectAll('*').remove();
+		if (props.data) {
+			g.append('g').attr('transform', `translate(20,${props.height+5})`).call(d3.axisBottom(x));
+		}
+		g.append('g').attr('transform', 'translate(20,4)').call(d3.axisLeft(y));
+	}, [props.data, props.width, props.height]);
+	const colors = ['#2a77c5', '#c52a2a'];
+	return (
+		<Fragment>
+			<g transform="translate(20,5)">
+				{data && data.v.map((v,i) =>
+					<path fill="none" stroke={colors[i]} stroke-width="2.5" d={
+						d3.line().x(j => x(data.t[j])).y(j => y(v[j]))(data.t.map((_,j) => j))
+					} />
+				)}
+			</g>
+			<g ref={axes} />
+		</Fragment>
+	);
+}
+
 class RaceParams extends Record({
 	mood: 2 as Mood,
 	ground: GroundCondition.Good,
@@ -177,11 +206,26 @@ async function deserialize(hash) {
 
 function App(props) {
 	//const [language, setLanguage] = useLanguageSelect();
-	const [courseId, setCourseId] = useState(DEFAULT_COURSE_ID);
 	const [skillsOpen, setSkillsOpen] = useState(false);
-	const [results, setResults] = useState([]);
 	const [racedef, setRaceDef] = useState(() => new RaceParams());
 	const [nsamples, setSamples] = useState(DEFAULT_SAMPLES);
+	const [{courseId, results, runData}, setSimState] = useReducer((state, o: number | {results: any, runData: any}) => {
+		if (typeof o == 'number') {
+			return {
+				courseId: o,
+				results: [],
+				runData: null
+			};
+		} else {
+			return {
+				courseId: state.courseId,
+				results: o.results,
+				runData: o.runData
+			};
+		}
+	}, {courseId: DEFAULT_COURSE_ID, results: [], runData: null});
+	const setCourseId = setSimState;
+	const setResults = (results, runData) => setSimState({results, runData});
 
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
@@ -245,16 +289,26 @@ function App(props) {
 		let a = standard.build(), b = compare.build();
 		let sign = 1;
 		const diff = [];
+		let minrun, maxrun, meanrun, medianrun;
 		for (let i = 0; i < nsamples; ++i) {
 			const s1 = a.next().value as RaceSolver;
 			const s2 = b.next().value as RaceSolver;
+			const data = {t: [], v: [[], []]};
 
 			while (s2.pos < course.distance) {
 				s2.step(1/15);
+				data.t.push(s2.accumulatetime.t);
+				data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 			}
 			while (s1.accumulatetime.t < s2.accumulatetime.t) {
 				s1.step(1/15);
+				data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 			}
+			// NOTE: we don't want to run the rest of the way even for chart data. you tried this before since it seems
+			// like it should make sense, but it doesn't work since then you have two different axes for time and then
+			// the velocities for each run aren't aligned with each other, which is confusing. imo it's actually the
+			// more expected behavior to have the ending point of s1 be /its velocity at time s2.t/, and not its
+			// velocity at the end of the race.
 
 			// if `standard` is faster than `compare` then the former ends up going past the course distance
 			// this is not in itself a problem, but it would overestimate the difference if for example a skill
@@ -266,10 +320,24 @@ function App(props) {
 				--i;  // this one didnt count
 			} else {
 				diff.push(sign * (s2.pos - s1.pos) / 2.5);
+				minrun = data;
 			}
 		}
 		diff.sort((a,b) => a - b);
-		setResults(diff);
+		setResults(diff, {minrun});
+	}
+
+	function rtMouseMove(pos) {
+		if (runData == null) return;
+		const data = runData.minrun;
+		document.getElementById('rtMouseOverBox').style.display = 'block';
+		document.getElementById('rtT').textContent = data.t[Math.round(pos * (data.t.length - 1))].toFixed(2) + ' s';
+		document.getElementById('rtV1').textContent = data.v[0][Math.round(pos * (data.t.length - 1))].toFixed(2) + ' m/s';
+		document.getElementById('rtV2').textContent = data.v[1][Math.round(pos * (data.t.length - 1))].toFixed(2) + ' m/s';
+	}
+
+	function rtMouseLeave() {
+		document.getElementById('rtMouseOverBox').style.display = 'none';
 	}
 
 	const mid = Math.floor(results.length / 2);
@@ -280,7 +348,14 @@ function App(props) {
 		<Language.Provider value={props.lang}>
 			<IntlProvider definition={strings}>
 				<div id="topPane">
-					<RaceTrack courseid={courseId} width="960" height="220" />
+					<RaceTrack courseid={courseId} width={960} height={220} xOffset={20} yOffset={5} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}>
+						<VelocityLines data={runData && runData.minrun} width={960} height={220} />
+						<g id="rtMouseOverBox" style="display:none">
+							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
+							<text id="rtV2" x="25" y="20" fill="#c52a2a" font-size="10px"></text>
+							<text id="rtT" x="25" y="30" fill="black" font-size="10px"></text>
+						</g>
+					</RaceTrack>
 					<div id="runPane">
 						<label for="nsamples">Samples:</label>
 						<input type="number" id="nsamples" min="1" max="10000" value={nsamples} onInput={(e) => setSamples(+e.currentTarget.value)} />
@@ -315,7 +390,7 @@ function App(props) {
 								</tr>
 							</tbody>
 						</table>
-						<div id="resultsHelp">Positive numbers mean <strong>right</strong> is faster, negative numbers mean <strong>left</strong> is faster.</div>
+						<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">left</strong> is faster, positive numbers mean <strong style="color:#c52a2a">right</strong> is faster.</div>
 						<Histogram width={500} height={333} data={results} />
 					</div>
 				}
