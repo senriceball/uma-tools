@@ -204,28 +204,130 @@ async function deserialize(hash) {
 	}
 }
 
+function runComparison(nsamples, course, racedef, uma1, uma2) {
+	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about
+	// which uma is slower
+	const standard = new RaceSolverBuilder(nsamples * 2)
+		.seed(2615953739)
+		.course(course)
+		.mood(racedef.mood)
+		.ground(racedef.ground)
+		.weather(racedef.weather)
+		.season(racedef.season)
+		.time(racedef.time);
+	const compare = standard.fork();
+	standard.horse(uma1);
+	compare.horse(uma2);
+	uma1.skills.forEach(id => standard.addSkill(id));
+	uma2.skills.forEach(id => compare.addSkill(id));
+	standard.withAsiwotameru(); standard.useDefaultPacer();
+	compare.withAsiwotameru(); compare.useDefaultPacer();
+	let a = standard.build(), b = compare.build();
+	let sign = 1;
+	const diff = [];
+	let min = Infinity, max = -1, estMean, estMedian, bestMeanDiff = Infinity, bestMedianDiff = Infinity;
+	let minrun, maxrun, meanrun, medianrun;
+	const sampleCutoff = Math.max(Math.floor(nsamples * 0.8), nsamples - 200);
+	for (let i = 0; i < nsamples; ++i) {
+		const s1 = a.next().value as RaceSolver;
+		const s2 = b.next().value as RaceSolver;
+		const data = {t: [], v: [[], []]};
+
+		while (s2.pos < course.distance) {
+			s2.step(1/15);
+			data.t.push(s2.accumulatetime.t);
+			data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
+		}
+		while (s1.accumulatetime.t < s2.accumulatetime.t) {
+			s1.step(1/15);
+			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
+		}
+		// NOTE: we don't want to run the rest of the way even for chart data. you tried this before since it seems
+		// like it should make sense, but it doesn't work since then you have two different axes for time and then
+		// the velocities for each run aren't aligned with each other, which is confusing. imo it's actually the
+		// more expected behavior to have the ending point of s1 be /its velocity at time s2.t/, and not its
+		// velocity at the end of the race.
+
+		// if `standard` is faster than `compare` then the former ends up going past the course distance
+		// this is not in itself a problem, but it would overestimate the difference if for example a skill
+		// continues past the end of the course. i feel like there are probably some other situations where it would
+		// be inaccurate also. if this happens we have to swap them around and run it again.
+		if (s2.pos < s1.pos) {
+			[b,a] = [a,b];
+			sign *= -1;
+			--i;  // this one didnt count
+		} else {
+			const basinn = sign * (s2.pos - s1.pos) / 2.5;
+			diff.push(basinn);
+			if (basinn < min) {
+				min = basinn;
+				minrun = data;
+			}
+			if (basinn > max) {
+				max = basinn;
+				maxrun = data;
+			}
+			if (i == sampleCutoff) {
+				diff.sort((a,b) => a - b);
+				estMean = diff.reduce((a,b) => a + b) / diff.length;
+				const mid = Math.floor(diff.length / 2);
+				estMedian = mid > 0 && diff.length % 2 == 0 ? (diff[mid-1] + diff[mid]) / 2 : diff[mid];
+			}
+			if (i >= sampleCutoff) {
+				const meanDiff = Math.abs(basinn - estMean), medianDiff = Math.abs(basinn - estMedian);
+				if (meanDiff < bestMeanDiff) {
+					bestMeanDiff = meanDiff;
+					meanrun = data;
+				}
+				if (medianDiff < bestMedianDiff) {
+					bestMedianDiff = medianDiff;
+					medianrun = data;
+				}
+			}
+		}
+	}
+	diff.sort((a,b) => a - b);
+	return {results: diff, runData: {minrun, maxrun, meanrun, medianrun}};
+}
+
+const EMPTY_RESULTS_STATE = {courseId: DEFAULT_COURSE_ID, results: [], runData: null, chartData: null, displaying: ''};
+function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | string | {results: any, runData: any}) {
+	if (typeof o == 'number') {
+		return {
+			courseId: o,
+			results: [],
+			runData: null,
+			chartData: null,
+			displaying: ''
+		};
+	} else if (typeof o == 'string') {
+		return {
+			courseId: state.courseId,
+			results: state.results,
+			runData: state.runData,
+			chartData: state.runData[o],
+			displaying: o
+		};
+	} else {
+		return {
+			courseId: state.courseId,
+			results: o.results,
+			runData: o.runData,
+			chartData: o.runData.meanrun,
+			displaying: 'meanrun'
+		};
+	}
+}
+
 function App(props) {
 	//const [language, setLanguage] = useLanguageSelect();
 	const [skillsOpen, setSkillsOpen] = useState(false);
 	const [racedef, setRaceDef] = useState(() => new RaceParams());
 	const [nsamples, setSamples] = useState(DEFAULT_SAMPLES);
-	const [{courseId, results, runData}, setSimState] = useReducer((state, o: number | {results: any, runData: any}) => {
-		if (typeof o == 'number') {
-			return {
-				courseId: o,
-				results: [],
-				runData: null
-			};
-		} else {
-			return {
-				courseId: state.courseId,
-				results: o.results,
-				runData: o.runData
-			};
-		}
-	}, {courseId: DEFAULT_COURSE_ID, results: [], runData: null});
+	const [{courseId, results, runData, chartData, displaying}, setSimState] = useReducer(updateResultsState, EMPTY_RESULTS_STATE);
 	const setCourseId = setSimState;
-	const setResults = (results, runData) => setSimState({results, runData});
+	const setResults = setSimState;
+	const setChartData = setSimState;
 
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
@@ -269,71 +371,15 @@ function App(props) {
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
 	function doComparison() {
-		// * 2 because that's the worst case number of runs we have to do if we always guess wrong about
-		// which uma is slower
-		const standard = new RaceSolverBuilder(nsamples * 2)
-			.seed(2615953739)
-			.course(course)
-			.mood(racedef.mood)
-			.ground(racedef.ground)
-			.weather(racedef.weather)
-			.season(racedef.season)
-			.time(racedef.time);
-		const compare = standard.fork();
-		standard.horse(uma1);
-		compare.horse(uma2);
-		uma1.skills.forEach(id => standard.addSkill(id));
-		uma2.skills.forEach(id => compare.addSkill(id));
-		standard.withAsiwotameru(); standard.useDefaultPacer();
-		compare.withAsiwotameru(); compare.useDefaultPacer();
-		let a = standard.build(), b = compare.build();
-		let sign = 1;
-		const diff = [];
-		let minrun, maxrun, meanrun, medianrun;
-		for (let i = 0; i < nsamples; ++i) {
-			const s1 = a.next().value as RaceSolver;
-			const s2 = b.next().value as RaceSolver;
-			const data = {t: [], v: [[], []]};
-
-			while (s2.pos < course.distance) {
-				s2.step(1/15);
-				data.t.push(s2.accumulatetime.t);
-				data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
-			}
-			while (s1.accumulatetime.t < s2.accumulatetime.t) {
-				s1.step(1/15);
-				data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
-			}
-			// NOTE: we don't want to run the rest of the way even for chart data. you tried this before since it seems
-			// like it should make sense, but it doesn't work since then you have two different axes for time and then
-			// the velocities for each run aren't aligned with each other, which is confusing. imo it's actually the
-			// more expected behavior to have the ending point of s1 be /its velocity at time s2.t/, and not its
-			// velocity at the end of the race.
-
-			// if `standard` is faster than `compare` then the former ends up going past the course distance
-			// this is not in itself a problem, but it would overestimate the difference if for example a skill
-			// continues past the end of the course. i feel like there are probably some other situations where it would
-			// be inaccurate also. if this happens we have to swap them around and run it again.
-			if (s2.pos < s1.pos) {
-				[b,a] = [a,b];
-				sign *= -1;
-				--i;  // this one didnt count
-			} else {
-				diff.push(sign * (s2.pos - s1.pos) / 2.5);
-				minrun = data;
-			}
-		}
-		diff.sort((a,b) => a - b);
-		setResults(diff, {minrun});
+		setResults(runComparison(nsamples, course, racedef, uma1, uma2));
 	}
 
 	function rtMouseMove(pos) {
-		if (runData == null) return;
-		const data = runData.minrun;
+		if (chartData == null) return;
 		document.getElementById('rtMouseOverBox').style.display = 'block';
-		document.getElementById('rtT').textContent = data.t[Math.round(pos * (data.t.length - 1))].toFixed(2) + ' s';
-		document.getElementById('rtV1').textContent = data.v[0][Math.round(pos * (data.t.length - 1))].toFixed(2) + ' m/s';
-		document.getElementById('rtV2').textContent = data.v[1][Math.round(pos * (data.t.length - 1))].toFixed(2) + ' m/s';
+		document.getElementById('rtT').textContent = chartData.t[Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' s';
+		document.getElementById('rtV1').textContent = chartData.v[0][Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' m/s';
+		document.getElementById('rtV2').textContent = chartData.v[1][Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' m/s';
 	}
 
 	function rtMouseLeave() {
@@ -349,7 +395,7 @@ function App(props) {
 			<IntlProvider definition={strings}>
 				<div id="topPane">
 					<RaceTrack courseid={courseId} width={960} height={220} xOffset={20} yOffset={5} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}>
-						<VelocityLines data={runData && runData.minrun} width={960} height={220} />
+						<VelocityLines data={chartData} width={960} height={220} />
 						<g id="rtMouseOverBox" style="display:none">
 							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
 							<text id="rtV2" x="25" y="20" fill="#c52a2a" font-size="10px"></text>
@@ -375,10 +421,11 @@ function App(props) {
 						<table id="resultsSummary">
 							<tfoot>
 								<tr>
-									<th scope="col">Minimum</th>
-									<th scope="col">Maximum</th>
-									<th scope="col">Mean</th>
-									<th scope="col">Median</th>
+									{Object.entries({
+										minrun: 'Minimum', maxrun: 'Maximum', meanrun: 'Mean', medianrun: 'Median'
+									}).map(([k,label]) =>
+										<th scope="col" class={displaying == k ? 'selected' : ''} onClick={() => setChartData(k)}>{label}</th>
+									)}
 								</tr>
 							</tfoot>
 							<tbody>

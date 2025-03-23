@@ -108,7 +108,12 @@ body {
 
 #resultsSummary > tfoot th {
 	color: rgb(121, 64, 22);
+	cursor: pointer;
 	font-size: 0.9em;
+}
+
+#resultsSummary > tfoot th.selected {
+	text-decoration: underline;
 }
 
 #resultsSummary > tbody th {
