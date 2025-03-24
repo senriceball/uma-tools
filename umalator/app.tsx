@@ -402,6 +402,7 @@ function App(props) {
 	const [uma1, setUma1] = useState(() => new HorseState());
 	const [uma2, setUma2] = useState(() => new HorseState());
 	const [currentIdx, setCurrentIdx] = useState(0);
+	const [expanded, toggleExpand] = useReducer((s,_) => !s, false);
 
 	useEffect(function () {
 		if (window.location.hash) {
@@ -475,7 +476,7 @@ function App(props) {
 	const umaTabs = (
 		<Fragment>
 			<div class={`umaTab ${currentIdx == 0 ? 'selected' : ''}`} onClick={() => setCurrentIdx(0)}>Umamusume 1</div>
-			<div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => setCurrentIdx(1)}>Umamusume 2</div>
+			<div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => setCurrentIdx(1)}>Umamusume 2<div id="expandBtn" onClick={toggleExpand}>⟩</div></div>
 		</Fragment>
 	);
 
@@ -573,29 +574,28 @@ function App(props) {
 						</div>
 					</div>
 				}
-				<div id="currentUma">
-					<div class={currentIdx == 0 ? 'selected' : ''}>
+				{expanded && <div id="umaPane" />}
+				<div id={expanded ? 'umaOverlay' : 'umaPane'}>
+					<div class={!expanded && currentIdx == 0 ? 'selected' : ''}>
 						<HorseDef key={uma1.outfitId} state={uma1} setState={setUma1} courseDistance={course.distance} tabstart={() => 4}>
-							{umaTabs}
+							{expanded ? 'Umamusume 1' : umaTabs}
 						</HorseDef>
 					</div>
-					<div class={currentIdx == 1 ? 'selected' : ''}>
+					{expanded &&
+						<div id="copyUmaButtons">
+							<div id="copyUmaToRight" onClick={copyUmaToRight} />
+							<div id="copyUmaToLeft" onClick={copyUmaToLeft} />
+						</div>}
+					<div class={!expanded && currentIdx == 1 ? 'selected' : ''}>
 						<HorseDef key={uma2.outfitId} state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4}>
-							{umaTabs}
+							{expanded ? 'Umamusume 2' : umaTabs}
 						</HorseDef>
 					</div>
+					{expanded && <div id="closeUmaOverlay" onClick={toggleExpand}>✕</div>}
 				</div>
 			</IntlProvider>
 		</Language.Provider>
 	);
 }
-				/*<div id="experimentsWrapper">
-					<HorseDef key={uma1.outfitId} title="Umamusume 1" state={uma1} setState={setUma1} courseDistance={course.distance} tabstart={() => 4} />
-					<div id="copyUmaButtons">
-						<div id="copyUmaToRight" onClick={copyUmaToRight} />
-						<div id="copyUmaToLeft" onClick={copyUmaToLeft} />
-					</div>
-					<HorseDef key={uma2.outfitId} title="Umamusume 2" state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4 + horseDefTabs()} />
-				</div>*/
 
 render(<App lang="en-ja" />, document.getElementById('app'));
