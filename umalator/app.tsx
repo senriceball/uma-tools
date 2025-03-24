@@ -182,10 +182,11 @@ class RaceParams extends Record({
 	grade: Grade.G1
 }) {}
 
-async function serialize(courseId: number, nsamples: number, racedef: RaceParams, uma1: HorseState, uma2: HorseState) {
+async function serialize(courseId: number, nsamples: number, usePosKeep: boolean, racedef: RaceParams, uma1: HorseState, uma2: HorseState) {
 	const json = JSON.stringify({
 		courseId,
 		nsamples,
+		usePosKeep,
 		racedef: racedef.toJS(),
 		uma1: uma1.toJS(),
 		uma2: uma2.toJS()
@@ -231,6 +232,7 @@ async function deserialize(hash) {
 				return {
 					courseId: o.courseId,
 					nsamples: o.nsamples,
+					usePosKeep: o.usePosKeep,
 					racedef: new RaceParams(o.racedef),
 					uma1: new HorseState(o.uma1).set('skills', SkillSet(o.uma1.skills)),
 					uma2: new HorseState(o.uma2).set('skills', SkillSet(o.uma2.skills))
@@ -239,6 +241,7 @@ async function deserialize(hash) {
 				return {
 					courseId: DEFAULT_COURSE_ID,
 					nsamples: DEFAULT_SAMPLES,
+					usePosKeep: true,
 					racedef: new RaceParams(),
 					uma1: new HorseState(),
 					uma2: new HorseState()
@@ -409,6 +412,7 @@ function App(props) {
 			deserialize(window.location.hash.slice(1)).then(o => {
 				setCourseId(o.courseId);
 				setSamples(o.nsamples);
+				if (o.usePosKeep != usePosKeep) togglePosKeep(0);
 				setRaceDef(o.racedef);
 				setUma1(o.uma1);
 				setUma2(o.uma2);
@@ -418,7 +422,7 @@ function App(props) {
 
 	function copyStateUrl(e) {
 		e.preventDefault();
-		serialize(courseId, nsamples, racedef, uma1, uma2).then(hash => {
+		serialize(courseId, nsamples, usePosKeep, racedef, uma1, uma2).then(hash => {
 			const url = window.location.protocol + '//' + window.location.host + window.location.pathname;
 			window.navigator.clipboard.writeText(url + '#' + hash);
 		});
