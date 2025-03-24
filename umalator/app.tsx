@@ -134,7 +134,7 @@ class RaceParams extends Record({
 }) {}
 
 const DEFAULT_COURSE_ID = 10101;
-const DEFAULT_SAMPLES = 2000;
+const DEFAULT_SAMPLES = 500;
 
 async function serialize(courseId: number, nsamples: number, racedef: RaceParams, uma1: HorseState, uma2: HorseState) {
 	const json = JSON.stringify({
