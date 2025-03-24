@@ -204,9 +204,8 @@ async function deserialize(hash) {
 	}
 }
 
-function runComparison(nsamples, course, racedef, uma1, uma2) {
-	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about
-	// which uma is slower
+function runComparison(nsamples, course, racedef, uma1, uma2, options) {
+	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about which uma is slower
 	const standard = new RaceSolverBuilder(nsamples * 2)
 		.seed(2615953739)
 		.course(course)
@@ -220,8 +219,10 @@ function runComparison(nsamples, course, racedef, uma1, uma2) {
 	compare.horse(uma2);
 	uma1.skills.forEach(id => standard.addSkill(id));
 	uma2.skills.forEach(id => compare.addSkill(id));
-	standard.withAsiwotameru(); standard.useDefaultPacer();
-	compare.withAsiwotameru(); compare.useDefaultPacer();
+	standard.withAsiwotameru(); compare.withAsiwotameru();
+	if (options.usePosKeep) {
+		standard.useDefaultPacer(); compare.useDefaultPacer();
+	}
 	let a = standard.build(), b = compare.build();
 	let sign = 1;
 	const diff = [];
@@ -324,6 +325,7 @@ function App(props) {
 	const [skillsOpen, setSkillsOpen] = useState(false);
 	const [racedef, setRaceDef] = useState(() => new RaceParams());
 	const [nsamples, setSamples] = useState(DEFAULT_SAMPLES);
+	const [usePosKeep, togglePosKeep] = useReducer((b,_) => !b, true);
 	const [{courseId, results, runData, chartData, displaying}, setSimState] = useReducer(updateResultsState, EMPTY_RESULTS_STATE);
 	const setCourseId = setSimState;
 	const setResults = setSimState;
@@ -334,33 +336,6 @@ function App(props) {
 	}
 
 	const course = useMemo(() => CourseHelpers.getCourse(courseId), [courseId]);
-
-	/*const [{uma1, uma2, currentUma}, umaStateFunc] = useReducer(function (state: any, [cmd,obj]) {
-		switch (cmd) {
-			case 'uma1': return {
-				uma1: obj,
-				uma2: state.uma2,
-				currentUma: state.currentUma == state.uma1 ? obj : state.uma2
-			};
-			case 'uma2': return {
-				uma1: state.uma1,
-				uma2: obj,
-				currentUma: state.currentUma == state.uma2 ? obj : state.uma2
-			};
-			case 'toggle': return {
-				uma1: state.uma1,
-				uma2: state.uma2,
-				currentUma: state.currentUma == state.uma1 ? state.uma2 : state.uma1
-			};
-		}
-	}, null, function () {
-		const u2 = new HorseState();
-		return {uma1: new HorseState(), uma2: u2, currentUma: u2};
-	});
-	const setCurrentUmaState = (uma) => umaStateFunc([currentUma == uma1 ? 'uma1' : 'uma2', uma]);
-	const setUma1 = (uma) => umaStateFunc(['uma1', uma]);
-	const setUma2 = (uma) => umaStateFunc(['uma2', uma]);
-	const toggleSelectedUma = () => umaStateFunc(['toggle', null]);*/
 
 	const [uma1, setUma1] = useState(() => new HorseState());
 	const [uma2, setUma2] = useState(() => new HorseState());
@@ -399,7 +374,7 @@ function App(props) {
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
 	function doComparison() {
-		setResults(runComparison(nsamples, course, racedef, uma1, uma2));
+		setResults(runComparison(nsamples, course, racedef, uma1, uma2, {usePosKeep}));
 	}
 
 	function rtMouseMove(pos) {
@@ -440,6 +415,10 @@ function App(props) {
 					<div id="runPane">
 						<label for="nsamples">Samples:</label>
 						<input type="number" id="nsamples" min="1" max="10000" value={nsamples} onInput={(e) => setSamples(+e.currentTarget.value)} />
+						<div>
+							<label for="poskeep">Simulate pos keep</label>
+							<input type="checkbox" id="poskeep" checked={usePosKeep} onClick={togglePosKeep} />
+						</div>
 						<button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
 						<a href="#" onClick={copyStateUrl}>Copy link</a>
 					</div>
