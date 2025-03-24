@@ -21,7 +21,7 @@ function skillmeta(id: string) {
 
 const Parser = getParser(Matcher.mockConditions);
 
-const STRINGS_ja = Object.freeze({
+export const STRINGS_ja = Object.freeze({
 	'skillfilters': Object.freeze({
 		'white': '白スキル',
 		'gold': '金スキル',
@@ -86,7 +86,7 @@ const STRINGS_ja = Object.freeze({
 	})
 });
 
-const STRINGS_en = Object.freeze({
+export const STRINGS_en = Object.freeze({
 	'skillfilters': Object.freeze({
 		'white': 'White skills',
 		'gold': 'Gold skills',

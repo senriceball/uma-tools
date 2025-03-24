@@ -10,7 +10,7 @@ import { RaceSolverBuilder } from '../uma-skill-tools/RaceSolverBuilder';
 import { Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skill-tools/RaceParameters';
 
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
-import { SkillList, Skill } from '../components/SkillList';
+import { SkillList, Skill, STRINGS_en as SKILL_STRINGS_en } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
 import { HorseState, SkillSet, HorseDef, horseDefTabs } from '../components/HorseDef';
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common.ts';
@@ -44,6 +44,22 @@ function binSearch(a: number[], x: number) {
 	return Math.abs(a[lo] - x) < Math.abs(a[hi] - x) ? lo : hi;
 }
 
+function TimeOfDaySelect(props) {
+	function click(e) {
+		e.stopPropagation();
+		if (!('timeofday' in e.target.dataset)) return;
+		props.set(+e.target.dataset.timeofday);
+	}
+	// + 2 because for some reason the icons are 00-02 (noon/evening/night) but the enum values are 1-4 (morning(?) noon evening night)
+	return (
+		<div class="timeofdaySelect" onClick={click}>
+			{Array(3).fill(0).map((_,i) =>
+				<img src={`/uma-tools/icons/utx_ico_timezone_0${i}.png`} title={SKILL_STRINGS_en.skilldetails.time[i+2]}
+					class={i+2 == props.value ? 'selected' : ''} data-timeofday={i+2} />)}
+		</div>
+	);
+}
+
 function GroundSelect(props) {
 	return (
 		<select class="groundSelect" value={props.value} onInput={(e) => props.set(+e.currentTarget.value)}>
@@ -64,7 +80,7 @@ function WeatherSelect(props) {
 	return (
 		<div class="weatherSelect" onClick={click}>
 			{Array(4).fill(0).map((_,i) =>
-				<img src={`/uma-tools/icons/utx_ico_weather_0${i}.png`}
+				<img src={`/uma-tools/icons/utx_ico_weather_0${i}.png`} title={SKILL_STRINGS_en.skilldetails.weather[i+1]}
 					class={i+1 == props.value ? 'selected' : ''} data-weather={i+1} />)}
 		</div>
 	);
@@ -79,24 +95,8 @@ function SeasonSelect(props) {
 	return (
 		<div class="seasonSelect" onClick={click}>
 			{Array(5).fill(0).map((_,i) =>
-				<img src={`/uma-tools/icons/utx_txt_season_0${i}.png`}
+				<img src={`/uma-tools/icons/utx_txt_season_0${i}.png`} title={SKILL_STRINGS_en.skilldetails.season[i+1]}
 					class={i+1 == props.value ? 'selected' : ''} data-season={i+1} />)}
-		</div>
-	);
-}
-
-function TimeOfDaySelect(props) {
-	function click(e) {
-		e.stopPropagation();
-		if (!('timeofday' in e.target.dataset)) return;
-		props.set(+e.target.dataset.timeofday);
-	}
-	// + 2 because for some reason the icons are 00-02 (noon/evening/night) but the enum values are 1-4 (morning(?) noon evening night)
-	return (
-		<div class="timeofdaySelect" onClick={click}>
-			{Array(3).fill(0).map((_,i) =>
-				<img src={`/uma-tools/icons/utx_ico_timezone_0${i}.png`}
-					class={i+2 == props.value ? 'selected' : ''} data-timeofday={i+2} />)}
 		</div>
 	);
 }
