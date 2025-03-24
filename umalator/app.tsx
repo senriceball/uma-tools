@@ -25,6 +25,9 @@ function skillmeta(id: string) {
 
 import './app.css';
 
+const DEFAULT_COURSE_ID = 10811;
+const DEFAULT_SAMPLES = 500;
+
 function id(x) { return x; }
 
 function binSearch(a: number[], x: number) {
@@ -178,9 +181,6 @@ class RaceParams extends Record({
 	time: Time.Midday,
 	grade: Grade.G1
 }) {}
-
-const DEFAULT_COURSE_ID = 10101;
-const DEFAULT_SAMPLES = 500;
 
 async function serialize(courseId: number, nsamples: number, racedef: RaceParams, uma1: HorseState, uma2: HorseState) {
 	const json = JSON.stringify({
