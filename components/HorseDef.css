@@ -3,6 +3,9 @@
 	border: 2px solid rgb(170, 221, 154);
 	border-radius: 12px;
 	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 	width: 700px;
 }
 
@@ -115,6 +118,7 @@
 }
 
 .horseParams {
+	background: white;
 	border: 2px solid rgb(163, 221, 111);
 	border-radius: 8px;
 	display: grid;
@@ -262,7 +266,9 @@
 .horseSkillListWrapper {
 	background: rgb(242, 242, 242);
 	border-radius: 4px;
+	height: 100%;
 	margin: 0 6px 6px 6px;
+	overflow-y: auto;
 }
 
 .horseSkillList {

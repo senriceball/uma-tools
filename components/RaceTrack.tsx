@@ -287,7 +287,7 @@ export function RaceTrack(props) {
 						nodes.push(<DistanceMarker d={s.start} x={s.start / course.distance * 100} y={60} up={i > 0 && s.start - sections[i-1].end < course.distance * 0.05} />);
 					}
 					if (s.end != course.distance) {
-						nodes.push(<DistanceMarker d={s.end} x={s.end / course.distance * 100} y={60} up={markedStart && s.length < course.distance * 0.05} />);
+						nodes.push(<DistanceMarker d={s.end} x={s.end / course.distance * 100} y={60} up={markedStart && s.end - s.start < course.distance * 0.05} />);
 					}
 					return <Fragment>{nodes}</Fragment>;
 				})}

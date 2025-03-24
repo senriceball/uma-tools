@@ -293,7 +293,7 @@ export function HorseDef(props) {
 
 	return (
 		<div class="horseDef">
-			<div class="horseDefHeader">{props.title}</div>
+			<div class="horseDefHeader">{props.children}</div>
 			<UmaSelector value={umaId} select={setUma} tabindex={tabnext()} />
 			<div class="horseParams">
 				<div class="horseParamHeader"><img src="/uma-tools/icons/status_00.png" /><span>Speed</span></div>

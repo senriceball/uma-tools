@@ -335,8 +335,36 @@ function App(props) {
 
 	const course = useMemo(() => CourseHelpers.getCourse(courseId), [courseId]);
 
+	/*const [{uma1, uma2, currentUma}, umaStateFunc] = useReducer(function (state: any, [cmd,obj]) {
+		switch (cmd) {
+			case 'uma1': return {
+				uma1: obj,
+				uma2: state.uma2,
+				currentUma: state.currentUma == state.uma1 ? obj : state.uma2
+			};
+			case 'uma2': return {
+				uma1: state.uma1,
+				uma2: obj,
+				currentUma: state.currentUma == state.uma2 ? obj : state.uma2
+			};
+			case 'toggle': return {
+				uma1: state.uma1,
+				uma2: state.uma2,
+				currentUma: state.currentUma == state.uma1 ? state.uma2 : state.uma1
+			};
+		}
+	}, null, function () {
+		const u2 = new HorseState();
+		return {uma1: new HorseState(), uma2: u2, currentUma: u2};
+	});
+	const setCurrentUmaState = (uma) => umaStateFunc([currentUma == uma1 ? 'uma1' : 'uma2', uma]);
+	const setUma1 = (uma) => umaStateFunc(['uma1', uma]);
+	const setUma2 = (uma) => umaStateFunc(['uma2', uma]);
+	const toggleSelectedUma = () => umaStateFunc(['toggle', null]);*/
+
 	const [uma1, setUma1] = useState(() => new HorseState());
 	const [uma2, setUma2] = useState(() => new HorseState());
+	const [currentIdx, setCurrentIdx] = useState(0);
 
 	useEffect(function () {
 		if (window.location.hash) {
@@ -390,12 +418,19 @@ function App(props) {
 	const median = results.length % 2 == 0 ? (results[mid-1] + results[mid]) / 2 : results[mid];
 	const mean = results.reduce((a,b) => a+b, 0) / results.length;
 
+	const umaTabs = (
+		<Fragment>
+			<div class={`umaTab ${currentIdx == 0 ? 'selected' : ''}`} onClick={() => setCurrentIdx(0)}>Umamusume 1</div>
+			<div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => setCurrentIdx(1)}>Umamusume 2</div>
+		</Fragment>
+	);
+
 	return (
 		<Language.Provider value={props.lang}>
 			<IntlProvider definition={strings}>
 				<div id="topPane">
-					<RaceTrack courseid={courseId} width={960} height={220} xOffset={20} yOffset={5} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}>
-						<VelocityLines data={chartData} width={960} height={220} />
+					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}>
+						<VelocityLines data={chartData} width={960} height={250} />
 						<g id="rtMouseOverBox" style="display:none">
 							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
 							<text id="rtV2" x="25" y="20" fill="#c52a2a" font-size="10px"></text>
@@ -422,9 +457,12 @@ function App(props) {
 							<tfoot>
 								<tr>
 									{Object.entries({
-										minrun: 'Minimum', maxrun: 'Maximum', meanrun: 'Mean', medianrun: 'Median'
+										minrun: ['Minimum', 'Set chart display to the run with minimum bashin difference'],
+										maxrun: ['Maximum', 'Set chart display to the run with maximum bashin difference'],
+										meanrun: ['Mean', 'Set chart display to a run representative of the mean bashin difference'],
+										medianrun: ['Median', 'Set chart display to a run representative of the median bashin difference']
 									}).map(([k,label]) =>
-										<th scope="col" class={displaying == k ? 'selected' : ''} onClick={() => setChartData(k)}>{label}</th>
+										<th scope="col" class={displaying == k ? 'selected' : ''} title={label[1]} onClick={() => setChartData(k)}>{label[0]}</th>
 									)}
 								</tr>
 							</tfoot>
@@ -437,21 +475,33 @@ function App(props) {
 								</tr>
 							</tbody>
 						</table>
-						<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">left</strong> is faster, positive numbers mean <strong style="color:#c52a2a">right</strong> is faster.</div>
+						<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">Umamusume 1</strong> is faster, positive numbers mean <strong style="color:#c52a2a">Umamusume 2</strong> is faster.</div>
 						<Histogram width={500} height={333} data={results} />
 					</div>
 				}
-				<div id="experimentsWrapper">
+				<div id="currentUma">
+					<div class={currentIdx == 0 ? 'selected' : ''}>
+						<HorseDef key={uma1.outfitId} state={uma1} setState={setUma1} courseDistance={course.distance} tabstart={() => 4}>
+							{umaTabs}
+						</HorseDef>
+					</div>
+					<div class={currentIdx == 1 ? 'selected' : ''}>
+						<HorseDef key={uma2.outfitId} state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4}>
+							{umaTabs}
+						</HorseDef>
+					</div>
+				</div>
+			</IntlProvider>
+		</Language.Provider>
+	);
+}
+				/*<div id="experimentsWrapper">
 					<HorseDef key={uma1.outfitId} title="Umamusume 1" state={uma1} setState={setUma1} courseDistance={course.distance} tabstart={() => 4} />
 					<div id="copyUmaButtons">
 						<div id="copyUmaToRight" onClick={copyUmaToRight} />
 						<div id="copyUmaToLeft" onClick={copyUmaToLeft} />
 					</div>
 					<HorseDef key={uma2.outfitId} title="Umamusume 2" state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4 + horseDefTabs()} />
-				</div>
-			</IntlProvider>
-		</Language.Provider>
-	);
-}
+				</div>*/
 
 render(<App lang="en-ja" />, document.getElementById('app'));

@@ -7,6 +7,7 @@ found the latter easier.
 * TODO integrated bashin chart
 * TODO skill hints/cost calculator?
 * TODO show skill activations on course chart
+* TODO jp localization
 * miscellany
 ** DONE sort skills by disp_order from the db
 add to skill_meta.json
