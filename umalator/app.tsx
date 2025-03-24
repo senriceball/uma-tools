@@ -99,14 +99,12 @@ function VelocityLines(props) {
 	const axes = useRef(null);
 	const data = props.data;
 	const x = data && d3.scaleLinear().domain([0,data.t[data.t.length-1]]).range([0,props.width]);
-	const y = d3.scaleLinear().domain([0,30]).range([props.height,0]);
+	const y = data && d3.scaleLinear().domain([0,d3.max(data.v, v => d3.max(v))]).range([props.height,0]);
 	useEffect(function () {
-		if (axes.current == null) return;
+		if (axes.current == null || !data) return;
 		const g = d3.select(axes.current);
 		g.selectAll('*').remove();
-		if (props.data) {
-			g.append('g').attr('transform', `translate(20,${props.height+5})`).call(d3.axisBottom(x));
-		}
+		g.append('g').attr('transform', `translate(20,${props.height+5})`).call(d3.axisBottom(x));
 		g.append('g').attr('transform', 'translate(20,4)').call(d3.axisLeft(y));
 	}, [props.data, props.width, props.height]);
 	const colors = ['#2a77c5', '#c52a2a'];
