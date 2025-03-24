@@ -346,10 +346,10 @@ export function RaceTrack(props) {
 					state.rungs[i].push(r);
 					const y = 90 - 10 * i;
 					return (
-						<Fragment>
-							<rect x={x+'%'} y={y+'%'} width={w+'%'} height="10%" fill={desc.color.fill} stroke={desc.color.stroke} />
-							<text x={x+'%'} y={y+7+'%'} font-size="14px" stroke="white" stroke-width="2" paint-order="stroke">{desc.text}</text>
-						</Fragment>
+						<svg class="textbox" x={x+'%'} y={y+'%'} width={w+'%'} height="10%">
+							<rect x="0" y="0" width="100%" height="100%" fill={desc.color.fill} stroke={desc.color.stroke} />
+							<text x="0" y="50%" font-size="12px" dominant-baseline="central">{desc.text}</text>
+						</svg>
 					);
 				});
 				state.elem.push(<Fragment>{rects}</Fragment>);

@@ -466,7 +466,7 @@ function App(props) {
 	return (
 		<Language.Provider value={props.lang}>
 			<IntlProvider definition={strings}>
-				<div id="topPane">
+				<div id="topPane" class={chartData ? 'hasResults' : ''}>
 					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave} regions={skillActivations}>
 						<VelocityLines data={chartData} courseDistance={course.distance} width={960} height={250} xOffset={20} />
 						<g id="rtMouseOverBox" style="display:none">
@@ -493,31 +493,57 @@ function App(props) {
 					</div>
 				</div>
 				{results.length > 0 &&
-					<div id="resultsPane">
-						<table id="resultsSummary">
-							<tfoot>
-								<tr>
-									{Object.entries({
-										minrun: ['Minimum', 'Set chart display to the run with minimum bashin difference'],
-										maxrun: ['Maximum', 'Set chart display to the run with maximum bashin difference'],
-										meanrun: ['Mean', 'Set chart display to a run representative of the mean bashin difference'],
-										medianrun: ['Median', 'Set chart display to a run representative of the median bashin difference']
-									}).map(([k,label]) =>
-										<th scope="col" class={displaying == k ? 'selected' : ''} title={label[1]} onClick={() => setChartData(k)}>{label[0]}</th>
-									)}
-								</tr>
-							</tfoot>
-							<tbody>
-								<tr>
-									<th>{results[0].toFixed(2)}<span class="unit-basinn">バ身</span></th>
-									<th>{results[results.length-1].toFixed(2)}<span class="unit-basinn">バ身</span></th>
-									<th>{mean.toFixed(2)}<span class="unit-basinn">バ身</span></th>
-									<th>{median.toFixed(2)}<span class="unit-basinn">バ身</span></th>
-								</tr>
-							</tbody>
-						</table>
-						<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">Umamusume 1</strong> is faster, positive numbers mean <strong style="color:#c52a2a">Umamusume 2</strong> is faster.</div>
-						<Histogram width={500} height={333} data={results} />
+					<div id="resultsPaneWrapper">
+						<div id="resultsPane">
+							<table id="resultsSummary">
+								<tfoot>
+									<tr>
+										{Object.entries({
+											minrun: ['Minimum', 'Set chart display to the run with minimum bashin difference'],
+											maxrun: ['Maximum', 'Set chart display to the run with maximum bashin difference'],
+											meanrun: ['Mean', 'Set chart display to a run representative of the mean bashin difference'],
+											medianrun: ['Median', 'Set chart display to a run representative of the median bashin difference']
+										}).map(([k,label]) =>
+											<th scope="col" class={displaying == k ? 'selected' : ''} title={label[1]} onClick={() => setChartData(k)}>{label[0]}</th>
+										)}
+									</tr>
+								</tfoot>
+								<tbody>
+									<tr>
+										<td>{results[0].toFixed(2)}<span class="unit-basinn">バ身</span></td>
+										<td>{results[results.length-1].toFixed(2)}<span class="unit-basinn">バ身</span></td>
+										<td>{mean.toFixed(2)}<span class="unit-basinn">バ身</span></td>
+										<td>{median.toFixed(2)}<span class="unit-basinn">バ身</span></td>
+									</tr>
+								</tbody>
+							</table>
+							<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">Umamusume 1</strong> is faster, positive numbers mean <strong style="color:#c52a2a">Umamusume 2</strong> is faster.</div>
+							<Histogram width={500} height={333} data={results} />
+						</div>
+						<div id="skillTables">
+							{chartData.sk[0].size > 0 &&
+								<table>
+									<caption style="color:#2a77c5">Umamusume 1</caption>
+									<tbody>
+										{chartData.sk[0].entries().map(([id,pos]) =>
+											<tr>
+												<td>{skillnames[id][0]}</td>
+												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
+											</tr>).toArray()}
+									</tbody>
+								</table>}
+							{chartData.sk[1].size > 0 &&
+								<table>
+									<caption style="color:#c52a2a">Umamusume 2</caption>
+									<tbody>
+										{chartData.sk[1].entries().map(([id,pos]) =>
+											<tr>
+												<td>{skillnames[id][0]}</td>
+												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
+											</tr>).toArray()}
+									</tbody>
+								</table>}
+						</div>
 					</div>
 				}
 				<div id="currentUma">

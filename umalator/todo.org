@@ -6,10 +6,14 @@ make a best effort to save/estimate mean and median as well (e.g. using some (ap
 found the latter easier.
 * TODO integrated bashin chart
 * TODO skill hints/cost calculator?
-* TODO show skill activations on course chart
+* DONE show skill activations on course chart
 * TODO jp localization
 * miscellany
 ** DONE sort skills by disp_order from the db
 add to skill_meta.json
 ** TODO respond to url hash change events to load state
 i assume theres some kind of event for this
+** make the skill activation position tables on the right scroll when they run out of room instead of causing the viewport to scroll
+this is oddly difficult, especially because i don't want the captions to also scroll so can't just wrap it in a div
+css table behavior is rather strange to me
+** race time selector
