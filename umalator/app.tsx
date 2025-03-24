@@ -85,6 +85,22 @@ function SeasonSelect(props) {
 	);
 }
 
+function TimeOfDaySelect(props) {
+	function click(e) {
+		e.stopPropagation();
+		if (!('timeofday' in e.target.dataset)) return;
+		props.set(+e.target.dataset.timeofday);
+	}
+	// + 2 because for some reason the icons are 00-02 (noon/evening/night) but the enum values are 1-4 (morning(?) noon evening night)
+	return (
+		<div class="timeofdaySelect" onClick={click}>
+			{Array(3).fill(0).map((_,i) =>
+				<img src={`/uma-tools/icons/utx_ico_timezone_0${i}.png`}
+					class={i+2 == props.value ? 'selected' : ''} data-timeofday={i+2} />)}
+		</div>
+	);
+}
+
 function Histogram(props) {
 	const {data, width, height} = props;
 	const axes = useRef(null);
@@ -487,8 +503,11 @@ function App(props) {
 					<div id="buttonsRow">
 						<TrackSelect key={courseId} courseid={courseId} setCourseid={setCourseId} tabindex={2} />
 						<div id="buttonsRowSpace" />
-						<GroundSelect value={racedef.ground} set={racesetter('ground')} />
-						<WeatherSelect value={racedef.weather} set={racesetter('weather')} />
+						<TimeOfDaySelect value={racedef.time} set={racesetter('time')} />
+						<div>
+							<GroundSelect value={racedef.ground} set={racesetter('ground')} />
+							<WeatherSelect value={racedef.weather} set={racesetter('weather')} />
+						</div>
 						<SeasonSelect value={racedef.season} set={racesetter('season')} />
 					</div>
 				</div>
