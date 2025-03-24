@@ -115,14 +115,16 @@ function Histogram(props) {
 function VelocityLines(props) {
 	const axes = useRef(null);
 	const data = props.data;
-	const x = data && d3.scaleLinear().domain([0,d3.max(data.p, p => p[p.length-1])]).range([0,props.width]);
+	const x = d3.scaleLinear().domain([0,props.courseDistance]).range([0,props.width]);
 	const y = data && d3.scaleLinear().domain([0,d3.max(data.v, v => d3.max(v))]).range([props.height,0]);
 	useEffect(function () {
-		if (axes.current == null || !data) return;
+		if (axes.current == null) return;
 		const g = d3.select(axes.current);
 		g.selectAll('*').remove();
 		g.append('g').attr('transform', `translate(${props.xOffset},${props.height+5})`).call(d3.axisBottom(x));
-		g.append('g').attr('transform', `translate(${props.xOffset},4)`).call(d3.axisLeft(y));
+		if (data) {
+			g.append('g').attr('transform', `translate(${props.xOffset},4)`).call(d3.axisLeft(y));
+		}
 	}, [props.data, props.width, props.height]);
 	const colors = ['#2a77c5', '#c52a2a'];
 	return (
@@ -130,7 +132,7 @@ function VelocityLines(props) {
 			<g transform={`translate(${props.xOffset},5)`}>
 				{data && data.v.map((v,i) =>
 					<path fill="none" stroke={colors[i]} stroke-width="2.5" d={
-						d3.line().x(j => x(data.p[i][j])).y(j => y(v[j]))(data.t.map((_,j) => j))
+						d3.line().x(j => x(data.p[i][j])).y(j => y(v[j]))(data.p[i].map((_,j) => j))
 					} />
 				)}
 			</g>
@@ -251,11 +253,11 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 		skillActivations.clear();
 		const s1 = a.next().value as RaceSolver;
 		const s2 = b.next().value as RaceSolver;
-		const data = {t: [], p: [[], []], v: [[], []], a: []};
+		const data = {t: [[], []], p: [[], []], v: [[], []], a: []};
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
-			data.t.push(s2.accumulatetime.t);
+			data.t[1].push(s2.accumulatetime.t);
 			data.p[1].push(s2.pos);
 			data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 		}
@@ -263,26 +265,30 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
 			s1.step(1/15);
+			data.t[0].push(s1.accumulatetime.t);
+			data.p[0].push(s1.pos);
+			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
+		}
+		// run the rest of the way to have data for the chart
+		const pos1 = s1.pos;
+		while (s1.pos < course.distance) {
+			s1.step(1/15);
+			data.t[0].push(s1.accumulatetime.t);
 			data.p[0].push(s1.pos);
 			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 		}
 		data.a.push(new Map(skillActivations));
-		// NOTE: we don't want to run the rest of the way even for chart data. you tried this before since it seems
-		// like it should make sense, but it doesn't work since then you have two different axes for time and then
-		// the velocities for each run aren't aligned with each other, which is confusing. imo it's actually the
-		// more expected behavior to have the ending point of s1 be /its velocity at time s2.t/, and not its
-		// velocity at the end of the race.
 
 		// if `standard` is faster than `compare` then the former ends up going past the course distance
 		// this is not in itself a problem, but it would overestimate the difference if for example a skill
 		// continues past the end of the course. i feel like there are probably some other situations where it would
 		// be inaccurate also. if this happens we have to swap them around and run it again.
-		if (s2.pos < s1.pos) {
+		if (s2.pos < pos1) {
 			[b,a] = [a,b];
 			sign *= -1;
 			--i;  // this one didnt count
 		} else {
-			const basinn = sign * (s2.pos - s1.pos) / 2.5;
+			const basinn = sign * (s2.pos - pos1) / 2.5;
 			diff.push(basinn);
 			if (basinn < min) {
 				min = basinn;
@@ -406,9 +412,8 @@ function App(props) {
 		document.getElementById('rtMouseOverBox').style.display = 'block';
 		const x = pos * course.distance;
 		const i0 = binSearch(chartData.p[0], x), i1 = binSearch(chartData.p[1], x);
-		document.getElementById('rtT').textContent = chartData.t[Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' s';
-		document.getElementById('rtV1').textContent = chartData.v[0][i0].toFixed(2) + ' m/s';
-		document.getElementById('rtV2').textContent = chartData.v[1][i1].toFixed(2) + ' m/s';
+		document.getElementById('rtV1').textContent = chartData.v[0][i0].toFixed(2) + ' m/s  t=' + chartData.t[0][i0].toFixed(2) + ' s';
+		document.getElementById('rtV2').textContent = chartData.v[1][i1].toFixed(2) + ' m/s  t=' + chartData.t[1][i1].toFixed(2) + ' s';
 	}
 
 	function rtMouseLeave() {
@@ -439,11 +444,10 @@ function App(props) {
 			<IntlProvider definition={strings}>
 				<div id="topPane">
 					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave} regions={skillActivations}>
-						<VelocityLines data={chartData} width={960} height={250} xOffset={20} />
+						<VelocityLines data={chartData} courseDistance={course.distance} width={960} height={250} xOffset={20} />
 						<g id="rtMouseOverBox" style="display:none">
 							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
 							<text id="rtV2" x="25" y="20" fill="#c52a2a" font-size="10px"></text>
-							<text id="rtT" x="25" y="30" fill="black" font-size="10px"></text>
 						</g>
 					</RaceTrack>
 					<div id="runPane">
