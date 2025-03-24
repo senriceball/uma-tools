@@ -803,6 +803,7 @@ body {
   z-index: 1;
 }
 #expandBtn {
+  cursor: default;
   float: right;
   margin-right: 10px;
 }

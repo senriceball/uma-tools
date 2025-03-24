@@ -480,7 +480,7 @@ function App(props) {
 	const umaTabs = (
 		<Fragment>
 			<div class={`umaTab ${currentIdx == 0 ? 'selected' : ''}`} onClick={() => setCurrentIdx(0)}>Umamusume 1</div>
-			<div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => setCurrentIdx(1)}>Umamusume 2<div id="expandBtn" onClick={toggleExpand}>⟩</div></div>
+			<div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => setCurrentIdx(1)}>Umamusume 2<div id="expandBtn" title="Expand panel" onClick={toggleExpand}>⟩</div></div>
 		</Fragment>
 	);
 
@@ -595,7 +595,7 @@ function App(props) {
 							{expanded ? 'Umamusume 2' : umaTabs}
 						</HorseDef>
 					</div>
-					{expanded && <div id="closeUmaOverlay" onClick={toggleExpand}>✕</div>}
+					{expanded && <div id="closeUmaOverlay" title="Close panel" onClick={toggleExpand}>✕</div>}
 				</div>
 			</IntlProvider>
 		</Language.Provider>
