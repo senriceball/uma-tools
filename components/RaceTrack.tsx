@@ -153,7 +153,7 @@ export function RaceTrack(props) {
 		if (e.offsetX < xOffset) return;
 		const line = svg.querySelector('.mouseoverLine');
 		const text = svg.querySelector('.mouseoverText');
-		const w = svg.getBoundingClientRect().width;
+		const w = svg.getBoundingClientRect().width - xOffset;
 		const x = e.offsetX - xOffset;
 		const y = e.offsetY - yOffset;
 		line.setAttribute('x1', x);

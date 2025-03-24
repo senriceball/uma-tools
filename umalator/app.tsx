@@ -21,6 +21,23 @@ import './app.css';
 
 function id(x) { return x; }
 
+function binSearch(a: number[], x: number) {
+	let lo = 0, hi = a.length - 1;
+	if (x < a[0]) return 0;
+	if (x > a[hi]) return hi - 1;
+	while (lo <= hi) {
+		const mid = Math.floor((lo + hi) / 2);
+		if (x < a[mid]) {
+			hi = mid - 1;
+		} else if (x > a[mid]) {
+			lo = mid + 1;
+		} else {
+			return mid;
+		}
+	}
+	return Math.abs(a[lo] - x) < Math.abs(a[hi] - x) ? lo : hi;
+}
+
 function GroundSelect(props) {
 	return (
 		<select class="groundSelect" value={props.value} onInput={(e) => props.set(+e.currentTarget.value)}>
@@ -98,22 +115,22 @@ function Histogram(props) {
 function VelocityLines(props) {
 	const axes = useRef(null);
 	const data = props.data;
-	const x = data && d3.scaleLinear().domain([0,data.t[data.t.length-1]]).range([0,props.width]);
+	const x = data && d3.scaleLinear().domain([0,d3.max(data.p, p => p[p.length-1])]).range([0,props.width]);
 	const y = data && d3.scaleLinear().domain([0,d3.max(data.v, v => d3.max(v))]).range([props.height,0]);
 	useEffect(function () {
 		if (axes.current == null || !data) return;
 		const g = d3.select(axes.current);
 		g.selectAll('*').remove();
-		g.append('g').attr('transform', `translate(20,${props.height+5})`).call(d3.axisBottom(x));
-		g.append('g').attr('transform', 'translate(20,4)').call(d3.axisLeft(y));
+		g.append('g').attr('transform', `translate(${props.xOffset},${props.height+5})`).call(d3.axisBottom(x));
+		g.append('g').attr('transform', `translate(${props.xOffset},4)`).call(d3.axisLeft(y));
 	}, [props.data, props.width, props.height]);
 	const colors = ['#2a77c5', '#c52a2a'];
 	return (
 		<Fragment>
-			<g transform="translate(20,5)">
+			<g transform={`translate(${props.xOffset},5)`}>
 				{data && data.v.map((v,i) =>
 					<path fill="none" stroke={colors[i]} stroke-width="2.5" d={
-						d3.line().x(j => x(data.t[j])).y(j => y(v[j]))(data.t.map((_,j) => j))
+						d3.line().x(j => x(data.p[i][j])).y(j => y(v[j]))(data.t.map((_,j) => j))
 					} />
 				)}
 			</g>
@@ -230,15 +247,17 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 	for (let i = 0; i < nsamples; ++i) {
 		const s1 = a.next().value as RaceSolver;
 		const s2 = b.next().value as RaceSolver;
-		const data = {t: [], v: [[], []]};
+		const data = {t: [], p: [[], []], v: [[], []]};
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
 			data.t.push(s2.accumulatetime.t);
+			data.p[1].push(s2.pos);
 			data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 		}
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
 			s1.step(1/15);
+			data.p[0].push(s1.pos);
 			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 		}
 		// NOTE: we don't want to run the rest of the way even for chart data. you tried this before since it seems
@@ -378,9 +397,11 @@ function App(props) {
 	function rtMouseMove(pos) {
 		if (chartData == null) return;
 		document.getElementById('rtMouseOverBox').style.display = 'block';
+		const x = pos * course.distance;
+		const i0 = binSearch(chartData.p[0], x), i1 = binSearch(chartData.p[1], x);
 		document.getElementById('rtT').textContent = chartData.t[Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' s';
-		document.getElementById('rtV1').textContent = chartData.v[0][Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' m/s';
-		document.getElementById('rtV2').textContent = chartData.v[1][Math.round(pos * (chartData.t.length - 1))].toFixed(2) + ' m/s';
+		document.getElementById('rtV1').textContent = chartData.v[0][i0].toFixed(2) + ' m/s';
+		document.getElementById('rtV2').textContent = chartData.v[1][i1].toFixed(2) + ' m/s';
 	}
 
 	function rtMouseLeave() {
@@ -402,8 +423,8 @@ function App(props) {
 		<Language.Provider value={props.lang}>
 			<IntlProvider definition={strings}>
 				<div id="topPane">
-					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}>
-						<VelocityLines data={chartData} width={960} height={250} />
+					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}}>
+						<VelocityLines data={chartData} width={960} height={250} xOffset={20} />
 						<g id="rtMouseOverBox" style="display:none">
 							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
 							<text id="rtV2" x="25" y="20" fill="#c52a2a" font-size="10px"></text>
