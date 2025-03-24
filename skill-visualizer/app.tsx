@@ -94,15 +94,16 @@ function regionsForSkill(course: CourseData, skillId: string, color: {stroke: st
 	wholeCourse.push(new Region(0, course.distance));
 	try {
 		const sd = buildSkillData(horse, {}, course, wholeCourse, parser, skillId, true);
-		if (sd == null) return {err: false, type: RegionDisplayType.Immedate, regions: [], color};
+		if (sd == null) return {err: false, type: RegionDisplayType.Immediate, regions: [], color};
 		return {
 			err: false,
 			type: sd.samplePolicy == ImmediatePolicy ? RegionDisplayType.Immediate : RegionDisplayType.Regions,
 			regions: sd.regions,
-			color
+			color,
+			height: 100
 		};
 	} catch (e) {
-		return {err: true, type: RegionDisplayType.Immedate, regions: [], color};
+		return {err: true, type: RegionDisplayType.Immediate, regions: [], color};
 	}
 }
 

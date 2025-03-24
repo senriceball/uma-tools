@@ -16,6 +16,12 @@ import { HorseState, SkillSet, HorseDef, horseDefTabs } from '../components/Hors
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common.ts';
 
 import skillnames from '../uma-skill-tools/data/skillnames.json';
+import skill_meta from '../skill_meta.json';
+
+function skillmeta(id: string) {
+	// handle the fake skills (e.g., variations of Sirius unique) inserted by make_skill_data with ids like 100701-1
+	return skill_meta[id.split('-')[0]];
+}
 
 import './app.css';
 
@@ -141,6 +147,13 @@ function VelocityLines(props) {
 	);
 }
 
+const NO_SHOW = Object.freeze([
+	'10011', '10012', '10016', '10021', '10022', '10026', '10031', '10032', '10036',
+	'10041', '10042', '10046', '10051', '10052', '10056', '10061', '10062', '10066',
+	'40011',
+	'20061', '20062', '20066'
+]);
+
 class RaceParams extends Record({
 	mood: 2 as Mood,
 	ground: GroundCondition.Good,
@@ -222,7 +235,6 @@ async function deserialize(hash) {
 }
 
 function runComparison(nsamples, course, racedef, uma1, uma2, options) {
-	const skillActivations = new Map();
 	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about which uma is slower
 	const standard = new RaceSolverBuilder(nsamples * 2)
 		.seed(2615953739)
@@ -231,9 +243,7 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 		.ground(racedef.ground)
 		.weather(racedef.weather)
 		.season(racedef.season)
-		.time(racedef.time)
-		.onSkillActivate((s,id) => id != 'asitame' && skillActivations.set(id, [s.pos, 0]))
-		.onSkillDeactivate((s,id) => id != 'asitame' && (skillActivations.get(id)[1] = s.pos));
+		.time(racedef.time);
 	const compare = standard.fork();
 	standard.horse(uma1);
 	compare.horse(uma2);
@@ -243,6 +253,11 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 	if (options.usePosKeep) {
 		standard.useDefaultPacer(); compare.useDefaultPacer();
 	}
+	const skillPos1 = new Map(), skillPos2 = new Map();
+	standard.onSkillActivate((s,id) => id != 'asitame' && skillPos1.set(id, [s.pos, 0]))
+	standard.onSkillDeactivate((s,id) => id != 'asitame' && (skillPos1.get(id)[1] = s.pos));
+	compare.onSkillActivate((s,id) => id != 'asitame' && skillPos2.set(id, [s.pos, 0]))
+	compare.onSkillDeactivate((s,id) => id != 'asitame' && (skillPos2.get(id)[1] = s.pos));
 	let a = standard.build(), b = compare.build();
 	let sign = 1;
 	const diff = [];
@@ -250,10 +265,9 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 	let minrun, maxrun, meanrun, medianrun;
 	const sampleCutoff = Math.max(Math.floor(nsamples * 0.8), nsamples - 200);
 	for (let i = 0; i < nsamples; ++i) {
-		skillActivations.clear();
 		const s1 = a.next().value as RaceSolver;
 		const s2 = b.next().value as RaceSolver;
-		const data = {t: [[], []], p: [[], []], v: [[], []], a: []};
+		const data = {t: [[], []], p: [[], []], v: [[], []], sk: [null,null]};
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
@@ -261,7 +275,8 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 			data.p[1].push(s2.pos);
 			data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 		}
-		data.a.push(new Map(skillActivations));
+		data.sk[1] = new Map(skillPos2);
+		skillPos2.clear();
 
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
 			s1.step(1/15);
@@ -277,7 +292,8 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 			data.p[0].push(s1.pos);
 			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 		}
-		data.a.push(new Map(skillActivations));
+		data.sk[0] = new Map(skillPos1);
+		skillPos1.clear();
 
 		// if `standard` is faster than `compare` then the former ends up going past the course distance
 		// this is not in itself a problem, but it would overestimate the difference if for example a skill
@@ -425,11 +441,19 @@ function App(props) {
 	const mean = results.reduce((a,b) => a+b, 0) / results.length;
 
 	const colors = [
-		{stroke: 'rgb(42, 119, 197)', fill: 'rgba(42, 119, 197, 0.3)'},
-		{stroke: 'rgb(197, 42, 42)', fill: 'rgba(197, 42, 42, 0.3)'}
+		{stroke: 'rgb(42, 119, 197)', fill: 'rgba(42, 119, 197, 0.7)'},
+		{stroke: 'rgb(197, 42, 42)', fill: 'rgba(197, 42, 42, 0.7)'}
 	];
-	const skillActivations = chartData == null ? [] : chartData.a.flatMap((a,i) => {
-		return a.values().map(b => ({type: RegionDisplayType.Regions, color: colors[i], regions: [{start: b[0], end: b[1]}]})).toArray();
+	const skillActivations = chartData == null ? [] : chartData.sk.flatMap((a,i) => {
+		return a.keys().flatMap(id => {
+			if (NO_SHOW.indexOf(skillmeta(id).iconId) > -1) return [];
+			else return [{
+				type: RegionDisplayType.Textbox,
+				color: colors[i],
+				text: skillnames[id][0],
+				regions: [{start: a.get(id)[0], end: a.get(id)[1]}]
+			}];
+		}).toArray();
 	});
 
 	const umaTabs = (

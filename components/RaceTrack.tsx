@@ -13,7 +13,7 @@ import tracknames from '../uma-skill-tools/data/tracknames.json';
 
 import './RaceTrack.css';
 
-export const enum RegionDisplayType { Immediate, Regions };
+export const enum RegionDisplayType { Immediate, Regions, Textbox };
 
 const STRINGS_ja = Object.freeze({
 	'racetrack': Object.freeze({
@@ -322,6 +322,50 @@ export function RaceTrack(props) {
 		);
 	}, [props.courseid]);
 
+	const regions = useMemo(function () {
+		return props.regions.reduce((state,desc) => {
+			if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
+				let x = desc.regions[0].start / course.distance * 100;
+				while (state.seen.has(x)) {
+					x += (3 + +(x == 0)) / props.width * 100;
+				}
+				state.seen.add(x);
+				state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={x == 0 ? 4 : 2} />);
+			} else if (desc.type == RegionDisplayType.Textbox) {
+				const rects = desc.regions.map(r => {
+					const x = r.start / course.distance * 100;
+					const w = (r.end - r.start) / course.distance * 100;
+					let i = 0;
+					while (i < 10) {
+						if (state.rungs[i].some(b => (r.start >= b.start && r.start < b.end) || (r.end > b.start && r.end <= b.end))) {
+							++i;
+						} else {
+							break;
+						}
+					}
+					state.rungs[i].push(r);
+					const y = 90 - 10 * i;
+					return (
+						<Fragment>
+							<rect x={x+'%'} y={y+'%'} width={w+'%'} height="10%" fill={desc.color.fill} stroke={desc.color.stroke} />
+							<text x={x+'%'} y={y+7+'%'} font-size="14px" stroke="white" stroke-width="2" paint-order="stroke">{desc.text}</text>
+						</Fragment>
+					);
+				});
+				state.elem.push(<Fragment>{rects}</Fragment>);
+			} else {
+				state.elem.push(
+					<Fragment>
+						{desc.regions.map(r =>
+							<rect x={`${r.start / course.distance * 100}%`} y={`${100 - desc.height}%`} width={`${(r.end - r.start) / course.distance * 100}%`} height={`${desc.height}%`} fill={desc.color.fill} stroke={desc.color.stroke} />
+						)}
+					</Fragment>
+				);
+			}
+			return state;
+		}, {seen: new Set(), rungs: Array(10).fill(0).map(_ => []), elem: []}).elem;
+	}, [props.regions, course.distance]);
+
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<div class="racetrackWrapper" style={`width:${props.width + xOffset + xExtra}px`}>
@@ -329,25 +373,7 @@ export function RaceTrack(props) {
 				<svg version="1.1" width={props.width + xOffset + xExtra} height={props.height + yOffset + yExtra} xmlns="http://www.w3.org/2000/svg" class="racetrackView" data-courseid={props.courseid} onMouseMove={doMouseMove} onMouseLeave={doMouseLeave}>
 					<svg x={props.xOffset} y={props.yOffset} width={props.width} height={props.height}>
 						{almostEverything}
-						{props.regions && props.regions.reduce((state,desc) => {
-							if (desc.type == RegionDisplayType.Immediate && desc.regions.length > 0) {
-								let x = desc.regions[0].start / course.distance * 100;
-								while (state.seen.has(x)) {
-									x += (3 + +(x == 0)) / props.width * 100;
-								}
-								state.seen.add(x);
-								state.elem.push(<line x1={`${x}%`} y1="0" x2={`${x}%`} y2="100%" stroke={desc.color.stroke} stroke-width={x == 0 ? 4 : 2} />);
-							} else {
-								state.elem.push(
-									<Fragment>
-										{desc.regions.map(r =>
-											<rect x={`${r.start / course.distance * 100}%`} y="0" width={`${(r.end - r.start) / course.distance * 100}%`} height="100%" fill={desc.color.fill} stroke={desc.color.stroke} />
-										)}
-									</Fragment>
-								);
-							}
-							return state;
-						}, {seen: new Set(), elem: []}).elem}
+						{regions}
 						<line class="mouseoverLine" x1="-5" y1="0" x2="-5" y2="100%" stroke="rgb(121,64,22)" stroke-width="2" />
 						<text class="mouseoverText" x="-5" y="-5" fill="rgb(121,64,22)"></text>
 					</svg>
