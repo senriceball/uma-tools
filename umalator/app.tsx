@@ -539,14 +539,18 @@ function App(props) {
 							<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">Umamusume 1</strong> is faster, positive numbers mean <strong style="color:#c52a2a">Umamusume 2</strong> is faster.</div>
 							<Histogram width={500} height={333} data={results} />
 						</div>
-						<div id="skillTables">
+						<div id="infoTables">
 							{chartData.sk[0].size > 0 &&
 								<table>
 									<caption style="color:#2a77c5">Umamusume 1</caption>
 									<tbody>
+										<tr><th>Time to finish</th><td>{chartData.t[0][chartData.t[0].length-1].toFixed(2) + ' s'}</td></tr>
+										<tr><th>Top speed</th><td>{chartData.v[0].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
+									</tbody>
+									<tbody>
 										{chartData.sk[0].entries().map(([id,pos]) =>
 											<tr>
-												<td>{skillnames[id][0]}</td>
+												<th>{skillnames[id][0]}</th>
 												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
 											</tr>).toArray()}
 									</tbody>
@@ -555,9 +559,13 @@ function App(props) {
 								<table>
 									<caption style="color:#c52a2a">Umamusume 2</caption>
 									<tbody>
+										<tr><th>Time to finish</th><td>{chartData.t[1][chartData.t[1].length-1].toFixed(2) + ' s'}</td></tr>
+										<tr><th>Top speed</th><td>{chartData.v[1].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
+									</tbody>
+									<tbody>
 										{chartData.sk[1].entries().map(([id,pos]) =>
 											<tr>
-												<td>{skillnames[id][0]}</td>
+												<th>{skillnames[id][0]}</th>
 												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
 											</tr>).toArray()}
 									</tbody>

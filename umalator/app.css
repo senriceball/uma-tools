@@ -154,22 +154,40 @@ body {
 	font-size: 0.5em;
 }
 
-#skillTables {
+#infoTables {
 	margin: 0 auto;
+	min-width: 300px;
 }
 
-#skillTables > table {
+#infoTables > table {
+	border-collapse: collapse;
 	width: 100%;
 }
 
-#skillTables > table td:first-child {
+#infoTables tbody {
+	border-bottom: 1px solid rgb(121, 64, 22);
+}
+
+#infoTables tbody:last-child {
+	border: none;
+}
+
+/* cant have normal margins on table elements for some reason */
+#infoTables tbody::before, #infoTables tbody::after {
+	content: '';
+	display: block;
+	height: 10px;
+}
+
+#infoTables > table th {
 	color: rgb(121, 64, 22);
 	font-weight: bold;
 	overflow: hidden;
+	text-align: left;
 	text-wrap: nowrap;
 }
 
-#skillTables > table td:last-child {
+#infoTables > table td {
 	font-family: monospace;
 	width: 140px;
 }
