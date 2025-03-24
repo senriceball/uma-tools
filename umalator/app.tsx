@@ -220,6 +220,7 @@ async function deserialize(hash) {
 }
 
 function runComparison(nsamples, course, racedef, uma1, uma2, options) {
+	const skillActivations = new Map();
 	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about which uma is slower
 	const standard = new RaceSolverBuilder(nsamples * 2)
 		.seed(2615953739)
@@ -228,7 +229,9 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 		.ground(racedef.ground)
 		.weather(racedef.weather)
 		.season(racedef.season)
-		.time(racedef.time);
+		.time(racedef.time)
+		.onSkillActivate((s,id) => id != 'asitame' && skillActivations.set(id, [s.pos, 0]))
+		.onSkillDeactivate((s,id) => id != 'asitame' && (skillActivations.get(id)[1] = s.pos));
 	const compare = standard.fork();
 	standard.horse(uma1);
 	compare.horse(uma2);
@@ -245,9 +248,10 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 	let minrun, maxrun, meanrun, medianrun;
 	const sampleCutoff = Math.max(Math.floor(nsamples * 0.8), nsamples - 200);
 	for (let i = 0; i < nsamples; ++i) {
+		skillActivations.clear();
 		const s1 = a.next().value as RaceSolver;
 		const s2 = b.next().value as RaceSolver;
-		const data = {t: [], p: [[], []], v: [[], []]};
+		const data = {t: [], p: [[], []], v: [[], []], a: []};
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
@@ -255,11 +259,14 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 			data.p[1].push(s2.pos);
 			data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 		}
+		data.a.push(new Map(skillActivations));
+
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
 			s1.step(1/15);
 			data.p[0].push(s1.pos);
 			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 		}
+		data.a.push(new Map(skillActivations));
 		// NOTE: we don't want to run the rest of the way even for chart data. you tried this before since it seems
 		// like it should make sense, but it doesn't work since then you have two different axes for time and then
 		// the velocities for each run aren't aligned with each other, which is confusing. imo it's actually the
@@ -412,6 +419,14 @@ function App(props) {
 	const median = results.length % 2 == 0 ? (results[mid-1] + results[mid]) / 2 : results[mid];
 	const mean = results.reduce((a,b) => a+b, 0) / results.length;
 
+	const colors = [
+		{stroke: 'rgb(42, 119, 197)', fill: 'rgba(42, 119, 197, 0.3)'},
+		{stroke: 'rgb(197, 42, 42)', fill: 'rgba(197, 42, 42, 0.3)'}
+	];
+	const skillActivations = chartData == null ? [] : chartData.a.flatMap((a,i) => {
+		return a.values().map(b => ({type: RegionDisplayType.Regions, color: colors[i], regions: [{start: b[0], end: b[1]}]})).toArray();
+	});
+
 	const umaTabs = (
 		<Fragment>
 			<div class={`umaTab ${currentIdx == 0 ? 'selected' : ''}`} onClick={() => setCurrentIdx(0)}>Umamusume 1</div>
@@ -423,7 +438,7 @@ function App(props) {
 		<Language.Provider value={props.lang}>
 			<IntlProvider definition={strings}>
 				<div id="topPane">
-					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave}}>
+					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave} regions={skillActivations}>
 						<VelocityLines data={chartData} width={960} height={250} xOffset={20} />
 						<g id="rtMouseOverBox" style="display:none">
 							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
