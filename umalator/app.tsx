@@ -540,36 +540,36 @@ function App(props) {
 							<Histogram width={500} height={333} data={results} />
 						</div>
 						<div id="infoTables">
-							{chartData.sk[0].size > 0 &&
-								<table>
-									<caption style="color:#2a77c5">Umamusume 1</caption>
-									<tbody>
-										<tr><th>Time to finish</th><td>{chartData.t[0][chartData.t[0].length-1].toFixed(2) + ' s'}</td></tr>
-										<tr><th>Top speed</th><td>{chartData.v[0].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
-									</tbody>
+							<table>
+								<caption style="color:#2a77c5">Umamusume 1</caption>
+								<tbody>
+									<tr><th>Time to finish</th><td>{chartData.t[0][chartData.t[0].length-1].toFixed(2) + ' s'}</td></tr>
+									<tr><th>Top speed</th><td>{chartData.v[0].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
+								</tbody>
+								{chartData.sk[0].size > 0 &&
 									<tbody>
 										{chartData.sk[0].entries().map(([id,pos]) =>
 											<tr>
 												<th>{skillnames[id][0]}</th>
 												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
 											</tr>).toArray()}
-									</tbody>
-								</table>}
-							{chartData.sk[1].size > 0 &&
-								<table>
-									<caption style="color:#c52a2a">Umamusume 2</caption>
-									<tbody>
-										<tr><th>Time to finish</th><td>{chartData.t[1][chartData.t[1].length-1].toFixed(2) + ' s'}</td></tr>
-										<tr><th>Top speed</th><td>{chartData.v[1].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
-									</tbody>
+									</tbody>}
+							</table>
+							<table>
+								<caption style="color:#c52a2a">Umamusume 2</caption>
+								<tbody>
+									<tr><th>Time to finish</th><td>{chartData.t[1][chartData.t[1].length-1].toFixed(2) + ' s'}</td></tr>
+									<tr><th>Top speed</th><td>{chartData.v[1].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
+								</tbody>
+								{chartData.sk[1].size > 0 &&
 									<tbody>
 										{chartData.sk[1].entries().map(([id,pos]) =>
 											<tr>
 												<th>{skillnames[id][0]}</th>
 												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
 											</tr>).toArray()}
-									</tbody>
-								</table>}
+									</tbody>}
+							</table>
 						</div>
 					</div>
 				}
