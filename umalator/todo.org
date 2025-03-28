@@ -30,3 +30,6 @@ need to check if b.start/end is within in r in addition to r within b
 ** TODO tab order in expanded uma pane is wrong
 ** TODO expanding uma pane sets selected uma to 2
 expand button click bubbling up to tab click; need stopPropagation()
+** TODO potential skill desync issues
+possibly having random skills on both umas that the other doesn't have can cause the activations for random skills that
+they DO both have to become desynced. need to look into this.

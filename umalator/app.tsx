@@ -253,7 +253,7 @@ async function deserialize(hash) {
 	}
 }
 
-function runComparison(nsamples, course, racedef, uma1, uma2, options) {
+function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2: HorseState, options) {
 	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about which uma is slower
 	const standard = new RaceSolverBuilder(nsamples * 2)
 		.seed(2615953739)
@@ -266,8 +266,13 @@ function runComparison(nsamples, course, racedef, uma1, uma2, options) {
 	const compare = standard.fork();
 	standard.horse(uma1);
 	compare.horse(uma2);
-	uma1.skills.forEach(id => standard.addSkill(id));
-	uma2.skills.forEach(id => compare.addSkill(id));
+	// ensure skills common to the two umas are added in the same order regardless of what additional skills they have
+	// this is important to make sure the rng for their activations is synced
+	const common = uma1.skills.intersect(uma2.skills).toArray().sort((a,b) => +a - +b);
+	const commonIdx = (id) => { let i = common.indexOf(id); return i > -1 ? i : common.length; };
+	const sort = (a,b) => commonIdx(a) - commonIdx(b) || +a - +b;
+	uma1.skills.toArray().sort(sort).forEach(id => standard.addSkill(id));
+	uma2.skills.toArray().sort(sort).forEach(id => compare.addSkill(id));
 	standard.withAsiwotameru(); compare.withAsiwotameru();
 	if (options.usePosKeep) {
 		standard.useDefaultPacer(); compare.useDefaultPacer();
