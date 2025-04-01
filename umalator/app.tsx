@@ -596,7 +596,7 @@ function App(props) {
 							<div id="copyUmaToLeft" onClick={copyUmaToLeft} />
 						</div>}
 					<div class={!expanded && currentIdx == 1 ? 'selected' : ''}>
-						<HorseDef key={uma2.outfitId} state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4}>
+						<HorseDef key={uma2.outfitId} state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4 + horseDefTabs()}>
 							{expanded ? 'Umamusume 2' : umaTabs}
 						</HorseDef>
 					</div>
