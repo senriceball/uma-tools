@@ -337,7 +337,10 @@ export function RaceTrack(props) {
 					const w = (r.end - r.start) / course.distance * 100;
 					let i = 0;
 					while (i < 10) {
-						if (state.rungs[i].some(b => (r.start >= b.start && r.start < b.end) || (r.end > b.start && r.end <= b.end))) {
+						if (state.rungs[i].some(b =>
+							(r.start >= b.start && r.start < b.end) || (r.end > b.start && r.end <= b.end)
+								|| (b.start >= r.start && b.start < r.end) || (b.end > r.start && b.end <= r.end)
+						)) {
 							++i;
 						} else {
 							break;

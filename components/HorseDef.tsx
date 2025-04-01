@@ -157,8 +157,14 @@ export function AptitudeSelect(props){
 		props.setA(e.currentTarget.dataset.horseAptitude);
 		setOpen(false);
 	}
+	function selectByKey(e: KeyboardEvent) {
+		const k = e.key.toUpperCase();
+		if (APTITUDES.indexOf(k) > -1) {
+			props.setA(k);
+		}
+	}
 	return (
-		<div class="horseAptitudeSelect" tabindex={props.tabindex} onClick={() => setOpen(!open)} onBlur={setOpen.bind(null, false)}>
+		<div class="horseAptitudeSelect" tabindex={props.tabindex} onClick={() => setOpen(!open)} onBlur={setOpen.bind(null, false)} onKeyDown={selectByKey}>
 			<span><AptitudeIcon a={props.a} /></span>
 			<ul style={open ? "display:block" : "display:none"}>
 				{APTITUDES.map(a => <li key={a} data-horse-aptitude={a} onClick={setAptitude}><AptitudeIcon a={a} /></li>)}

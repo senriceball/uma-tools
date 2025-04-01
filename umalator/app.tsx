@@ -410,7 +410,7 @@ function App(props) {
 	const [uma1, setUma1] = useState(() => new HorseState());
 	const [uma2, setUma2] = useState(() => new HorseState());
 	const [currentIdx, setCurrentIdx] = useState(0);
-	const [expanded, toggleExpand] = useReducer((s,_) => !s, false);
+	const [expanded, toggleExpand] = useReducer((s, e: Event) => { e.stopPropagation(); return !s; }, false);
 
 	useEffect(function () {
 		if (window.location.hash) {

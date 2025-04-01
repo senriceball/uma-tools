@@ -384,12 +384,12 @@ export function ExpandedSkillDetails(props) {
 					{props.dismissable && <span class="skillDismiss">✕</span>}
 				</div>
 				<div class="skillDetails">
+					<div>
+						<Text id="skilldetails.id" />
+						{props.id}
+					</div>
 					{skills[props.id].alternatives.map(alt =>
 						<div class="skillDetailsSection">
-							<div>
-								<Text id="skilldetails.id" />
-								{props.id}
-							</div>
 							{alt.precondition.length > 0 && <Fragment>
 								<Text id="skilldetails.preconditions" />
 								<div class="skillConditions">

@@ -24,11 +24,11 @@ css table behavior is rather strange to me
 ** DONE race time selector
 ** TODO revert to mob by deleting uma name
 * bugs
-** TODO shorter skills can overlap longer skills if the shorter skill is placed first
+** DONE shorter skills can overlap longer skills if the shorter skill is placed first
 need to check if b.start/end is within in r in addition to r within b
-** TODO skill id is repeated on each alternative
+** DONE skill id is repeated on each alternative
 ** DONE tab order in expanded uma pane is wrong
-** TODO expanding uma pane sets selected uma to 2
+** DONE expanding uma pane sets selected uma to 2
 expand button click bubbling up to tab click; need stopPropagation()
 ** TODO potential skill desync issues
 possibly having random skills on both umas that the other doesn't have can cause the activations for random skills that
