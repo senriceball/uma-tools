@@ -16,7 +16,7 @@ might be cool to animate e.g., the histogram bars popping up
 * miscellany
 ** DONE sort skills by disp_order from the db
 add to skill_meta.json
-** TODO respond to url hash change events to load state
+** DONE respond to url hash change events to load state
 i assume theres some kind of event for this
 ** DONE make the skill activation position tables on the right scroll when they run out of room instead of causing the viewport to scroll
 this is oddly difficult, especially because i don't want the captions to also scroll so can't just wrap it in a div

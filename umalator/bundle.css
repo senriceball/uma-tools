@@ -746,15 +746,25 @@ body {
 }
 #infoTables tbody {
   border-bottom: 1px solid rgb(121, 64, 22);
+  display: block;
+  width: 450px;
 }
 #infoTables tbody:last-child {
   border: none;
+  height: 180px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 #infoTables tbody::before,
 #infoTables tbody::after {
   content: "";
   display: block;
   height: 10px;
+}
+#infoTables > table tr {
+  display: table;
+  table-layout: fixed;
+  width: 450px;
 }
 #infoTables > table th {
   color: rgb(121, 64, 22);

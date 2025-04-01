@@ -412,7 +412,7 @@ function App(props) {
 	const [currentIdx, setCurrentIdx] = useState(0);
 	const [expanded, toggleExpand] = useReducer((s, e: Event) => { e.stopPropagation(); return !s; }, false);
 
-	useEffect(function () {
+	function loadState() {
 		if (window.location.hash) {
 			deserialize(window.location.hash.slice(1)).then(o => {
 				setCourseId(o.courseId);
@@ -423,6 +423,11 @@ function App(props) {
 				setUma2(o.uma2);
 			});
 		}
+	}
+
+	useEffect(function () {
+		loadState();
+		window.addEventListener('hashchange', loadState);
 	}, []);
 
 	function copyStateUrl(e) {
