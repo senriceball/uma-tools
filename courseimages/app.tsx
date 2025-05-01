@@ -10,7 +10,7 @@ const inoutKey = Object.freeze(['', '', '-in', '-out', '-outin']);
 function App(props) {
 	const rc = useRef(null);
 	const dl = useRef(null);
-	const [courseId, setCourseId] = useState(10811);
+	const [courseId, setCourseId] = useState(10101);
 	const course = CourseHelpers.getCourse(courseId);
 
 	useEffect(function () {
