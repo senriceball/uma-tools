@@ -1,5 +1,5 @@
 import { h, Fragment, cloneElement } from 'preact';
-import { useState, useContext, useRef } from 'preact/hooks';
+import { useState, useContext, useEffect, useRef } from 'preact/hooks';
 import { IntlProvider, Text, Localizer } from 'preact-i18n';
 
 import { getParser } from '../uma-skill-tools/ConditionParser';
@@ -12,6 +12,7 @@ import { Tooltip } from './Tooltip';
 import './SkillList.css';
 
 import skills from '../uma-skill-tools/data/skill_data.json';
+import skillnames from '../uma-skill-tools/data/skillnames.json';
 import skill_meta from '../skill_meta.json';
 
 function skillmeta(id: string) {
@@ -23,6 +24,7 @@ const Parser = getParser(Matcher.mockConditions);
 
 export const STRINGS_ja = Object.freeze({
 	'skillfilters': Object.freeze({
+		'search': '',  // TODO translate
 		'white': '白スキル',
 		'gold': '金スキル',
 		'pink': '進化スキル',
@@ -88,6 +90,7 @@ export const STRINGS_ja = Object.freeze({
 
 export const STRINGS_en = Object.freeze({
 	'skillfilters': Object.freeze({
+		'search': 'Search by skill name or conditions',
 		'white': 'White skills',
 		'gold': 'Gold skills',
 		'pink': 'Evolved skills',
@@ -454,6 +457,23 @@ const groups_filters = Object.freeze({
 	'location': ['phase0', 'phase1', 'phase2', 'phase3', 'finalcorner', 'finalstraight']
 });
 
+function textSearch(id: string, searchText: string, searchConditions: boolean) {
+	const needle = searchText.toUpperCase();
+	if (skillnames[id].some(s => s.toUpperCase().indexOf(needle) > -1)) {
+		return 1;
+	} else if (searchConditions) {
+		let op = null;
+		try {
+			op = C(searchText);
+		} catch (_) {
+			return 0;
+		}
+		return parsedConditions[id].some(alt => Matcher.treeMatch(op, alt)) ? 2 : 0;
+	} else {
+		return 0;
+	}
+}
+
 export function SkillList(props) {
 	const lang = useLanguage();
 	const [visible, setVisible] = useState(() => new Set(props.ids));
@@ -467,6 +487,12 @@ export function SkillList(props) {
 			setActive[group][filter] = setActive_;
 		});
 	});
+	const searchInput = useRef(null);
+	const [searchText, setSearchText] = useState('');
+
+	useEffect(function () {
+		if (props.isOpen && searchInput.current) searchInput.current.focus();
+	}, [props.isOpen]);
 	
 	const selectedMap = new Map(Array.from(props.selected).map(id => [skillmeta(id).groupId, id]));
 
@@ -486,11 +512,15 @@ export function SkillList(props) {
 	}
 
 	function updateFilters(e) {
-		if (e.target.tagName != 'BUTTON') return;
+		if (e.target.tagName != 'BUTTON' && e.target.tagName != 'INPUT') return;
 		e.stopPropagation();
 		const group = e.target.parentElement.dataset.filterGroup;
 		const filter = e.target.dataset.filter;
-		if (group == 'icontype') {
+		let newSearchText = searchText;
+		if (group == 'search') {
+			newSearchText = e.target.value;
+			setSearchText(newSearchText);
+		} else if (group == 'icontype') {
 			if (groups_filters.icontype.every(f => active.icontype[f])) {
 				groups_filters.icontype.forEach(f => f != filter && setActive.icontype[f](active.icontype[f] = false));
 			} else {
@@ -504,8 +534,14 @@ export function SkillList(props) {
 			Object.keys(active[group]).forEach(k => setActive[group][k](active[group][k] = !active[group][k] && k == filter))
 		}
 		const filtered = new Set();
+		let allowConditionSearch = true;
 		props.ids.forEach(id => {
-			const pass = Object.keys(groups_filters).every(group => {
+			// if any names match, don't search conditions
+			const passesTextSearch = newSearchText.length > 0 ? textSearch(id, newSearchText, allowConditionSearch) : 3;
+			if (allowConditionSearch && passesTextSearch == 1) {  // name matches
+				allowConditionSearch = false;
+			}
+			const pass = passesTextSearch && Object.keys(groups_filters).every(group => {
 				const check = groups_filters[group].filter(f => active[group][f]);
 				if (check.length == 0) return true;
 				if (group == 'rarity') return check.some(f => matchRarity(id, f));
@@ -536,6 +572,9 @@ export function SkillList(props) {
 	return (
 		<IntlProvider definition={lang == 'ja' ? STRINGS_ja : STRINGS_en}>
 			<div class="filterGroups" onClick={updateFilters}>
+				<div data-filter-group="search">
+					<Localizer><input type="text" class="filterSearch" value={searchText} placeholder={<Text id="skillfilters.search" />} onInput={updateFilters} ref={searchInput} /></Localizer>
+				</div>
 				<FilterGroup group="rarity">
 					<FilterButton filter="white" />
 					<FilterButton filter="gold" />

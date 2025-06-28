@@ -344,7 +344,7 @@ export function HorseDef(props) {
 			</div>
 			<div class={`horseSkillPickerOverlay ${skillPickerOpen ? "open" : ""}`} onClick={setSkillPickerOpen.bind(null, false)} />
 			<div class={`horseSkillPickerWrapper ${skillPickerOpen ? "open" : ""}`}>
-				<SkillList ids={selectableSkills} selected={new Set(state.skills)} setSelected={setSkillsAndClose} />
+				<SkillList ids={selectableSkills} selected={new Set(state.skills)} setSelected={setSkillsAndClose} isOpen={skillPickerOpen} />
 			</div>
 		</div>
 	);

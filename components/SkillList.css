@@ -30,6 +30,12 @@
 	filter: none;
 }
 
+.filterSearch {
+	margin: 3px 5px;
+	padding: 0.8em;
+	width: calc(100% - 26px);
+}
+
 .skillList {
 	display: grid;
 	font-size: 16px;
