@@ -6,7 +6,7 @@ use utf8;
 use Cwd 'abs_path';
 use File::Basename;
 use File::Copy;
-use File::Slurper 'read_text';
+use File::Slurper 'read_binary';
 use DBI;
 use DBD::SQLite::Constants qw(:file_open);
 use JSON::PP;
@@ -29,11 +29,11 @@ my $root = dirname(dirname(abs_path($mastermdb)));
 my $meta = $root . "./meta";
 my $datadir = $root . "/dat";
 
-my $umas = decode_json(read_text('umas.json', 'utf8'));
-my $icons = decode_json(read_text('icons.json', 'utf8'));
+my $umas = decode_json(read_binary('umas.json'));
+my $icons = decode_json(read_binary('icons.json'));
 
 # temporary: for importing english names from the old icons file
-my $en_icons = decode_json(read_text('umadle/icons.json'));
+my $en_icons = decode_json(read_binary('umadle/icons.json'));
 my %en_names;
 for my $en (keys %$en_icons) {
 	my $path = $en_icons->{$en};
@@ -81,7 +81,7 @@ while ($select_umas->fetch) {
 			$en_name = <STDIN>;
 			chomp $en_name;
 		}
-		$umas->{$id} = {name => [$ja_name, $en_name], outfits => {}};
+		$umas->{$id} = {name => [Encode::decode('utf8', $ja_name), $en_name], outfits => {}};
 		my $base = basename($icon_path);  # tehe
 		$icons->{$id} = "/uma-tools/icons/chara/$base.png";
 
@@ -97,7 +97,7 @@ while ($select_umas->fetch) {
 	$select_outfits->bind_columns(\($o_id, $epithet));
 	while ($select_outfits->fetch) {
 		push @outfit_ids, $o_id;
-		$umas->{$id}->{outfits}->{$o_id} = $epithet;
+		$umas->{$id}->{outfits}->{$o_id} = Encode::decode('utf8', $epithet);
 	}
 
 	my $icon_path;
@@ -118,6 +118,7 @@ while ($select_umas->fetch) {
 
 my $json = JSON::PP->new;
 $json->canonical(1);
+$json->utf8(1);
 open(my $umas_fh, '>', 'umas.json');
 print $umas_fh $json->encode($umas);
 close $umas_fh;
