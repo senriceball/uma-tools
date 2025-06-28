@@ -24,6 +24,8 @@ css table behavior is rather strange to me
 ** DONE race time selector
 ** TODO revert to mob by deleting uma name
 ** DONE text search for skill picker
+** DONE presets for CM/LOH
+i.e. course, ground type, weather, etc
 * bugs
 ** DONE shorter skills can overlap longer skills if the shorter skill is placed first
 need to check if b.start/end is within in r in addition to r within b

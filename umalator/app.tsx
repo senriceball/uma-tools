@@ -1,5 +1,5 @@
 import { h, Fragment, render } from 'preact';
-import { useState, useReducer, useMemo, useEffect, useRef, useCallback } from 'preact/hooks';
+import { useState, useReducer, useMemo, useEffect, useRef, useId, useCallback } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
 import { Record } from 'immutable';
 import * as d3 from 'd3';
@@ -25,7 +25,7 @@ function skillmeta(id: string) {
 
 import './app.css';
 
-const DEFAULT_COURSE_ID = 10811;
+const DEFAULT_COURSE_ID = 10906;
 const DEFAULT_SAMPLES = 500;
 
 function id(x) { return x; }
@@ -390,6 +390,41 @@ function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | strin
 	}
 }
 
+const enum EventType { CM, LOH };
+
+const presets = [
+	{type: EventType.LOH, date: '2025-08', courseId: 10105, season: Season.Summer, Time: Time.Midday},
+	{type: EventType.CM, date: '2025-07-25', courseId: 10906, ground: GroundCondition.Yielding, weather: Weather.Cloudy, season: Season.Summer, time: Time.Midday},
+	{type: EventType.CM, date: '2025-06-21', courseId: 10606, ground: GroundCondition.Good, weather: Weather.Sunny, season: Season.Spring, time: Time.Midday}
+]
+	.map(def => ({
+		type: def.type,
+		date: new Date(def.date),
+		courseId: def.courseId,
+		racedef: new RaceParams({
+			mood: 2 as Mood,
+			ground: def.type == EventType.CM ? def.ground : GroundCondition.Good,
+			weather: def.type == EventType.CM ? def.weather : Weather.Sunny,
+			season: def.season,
+			time: def.time,
+			grade: Grade.G1
+		})
+	}))
+	.sort((a,b) => +b.date - +a.date);
+
+function RacePresets(props) {
+	const id = useId();
+	return (
+		<Fragment>
+			<label for={id}>Preset:</label>
+			<select id={id} onChange={e => { const i = +e.currentTarget.value; i > -1 && props.set(presets[i].courseId, presets[i].racedef); }}>
+				<option value="-1"></option>
+				{presets.map((p,i) => <option value={i}>{p.date.getFullYear() + '-' + (100 + p.date.getUTCMonth() + 1).toString().slice(-2) + (p.type == EventType.CM ? ' CM' : ' LOH')}</option>)}
+			</select>
+		</Fragment>
+	);
+}
+
 function App(props) {
 	//const [language, setLanguage] = useLanguageSelect();
 	const [skillsOpen, setSkillsOpen] = useState(false);
@@ -514,6 +549,7 @@ function App(props) {
 						</div>
 						<button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
 						<a href="#" onClick={copyStateUrl}>Copy link</a>
+							<RacePresets set={(courseId, racedef) => { setCourseId(courseId); setRaceDef(racedef); }} />
 					</div>
 					<div id="buttonsRow">
 						<TrackSelect key={courseId} courseid={courseId} setCourseid={setCourseId} tabindex={2} />

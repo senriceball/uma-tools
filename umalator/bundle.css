@@ -77,11 +77,16 @@
 .iconFilterButton.active {
   filter: none;
 }
+.filterSearch {
+  margin: 3px 5px;
+  padding: 0.8em;
+  width: calc(100% - 26px);
+}
 .skillList {
   display: grid;
   font-size: 16px;
   gap: 16px 0;
-  grid-template-columns: repeat(5, auto);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   list-style-type: none;
   padding: 0;
 }
