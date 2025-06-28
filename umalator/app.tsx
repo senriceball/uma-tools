@@ -283,6 +283,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	compare.onSkillActivate((s,id) => id != 'asitame' && skillPos2.set(id, [s.pos, 0]))
 	compare.onSkillDeactivate((s,id) => id != 'asitame' && (skillPos2.get(id)[1] = s.pos));
 	let a = standard.build(), b = compare.build();
+	let ai = 1, bi = 0;
 	let sign = 1;
 	const diff = [];
 	let min = Infinity, max = -Infinity, estMean, estMedian, bestMeanDiff = Infinity, bestMedianDiff = Infinity;
@@ -295,18 +296,18 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
-			data.t[1].push(s2.accumulatetime.t);
-			data.p[1].push(s2.pos);
-			data.v[1].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
+			data.t[ai].push(s2.accumulatetime.t);
+			data.p[ai].push(s2.pos);
+			data.v[ai].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 		}
 		data.sk[1] = new Map(skillPos2);
 		skillPos2.clear();
 
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
 			s1.step(1/15);
-			data.t[0].push(s1.accumulatetime.t);
-			data.p[0].push(s1.pos);
-			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
+			data.t[bi].push(s1.accumulatetime.t);
+			data.p[bi].push(s1.pos);
+			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 		}
 		// run the rest of the way to have data for the chart
 		const pos1 = s1.pos;
@@ -325,6 +326,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 		// be inaccurate also. if this happens we have to swap them around and run it again.
 		if (s2.pos < pos1) {
 			[b,a] = [a,b];
+			[bi,ai] = [ai,bi];
 			sign *= -1;
 			--i;  // this one didnt count
 		} else {
