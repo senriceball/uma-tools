@@ -36,5 +36,6 @@ expand button click bubbling up to tab click; need stopPropagation()
 ** TODO potential skill desync issues
 possibly having random skills on both umas that the other doesn't have can cause the activations for random skills that
 they DO both have to become desynced. need to look into this.
-** TODO lock up after clicking min/max/etc in certain circumstances
+** DONE lock up after clicking min/max/etc in certain circumstances
 reproduce: https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPz2rDMAyH30VnH%2ByUQsitx7HLoMfRg0iUzDS2jP8QSsm7T%2FZaxvoGu0my9f0%2B3WHkEhO9TTAY3etegU%2FowkoJhqPWCkqiD07vRAGGHAspiDjSRDMMd3DMstgpWCIXXxkKNsL8RbHViTCxb2W2jh5fcaKapnehOzQVxCXPNlcLMPrQawOyHIgqsj%2BKRsrorEdpu2oVeGsRTXEpOT0fNpsmdtIddNuKmGm5CfZM%2FspFsJMVlh%2FpFLLNparAuaaVOOOf6Ql%2BAa%2Fjq11XyfwUW9E1cPm5pXu55Z9ccdn3b6%2Fl3rQJAgAA
+** TODO seirios ≤4 popularity version is unselectable

@@ -86,7 +86,7 @@
   display: grid;
   font-size: 16px;
   gap: 16px 0;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, 300px);
   list-style-type: none;
   padding: 0;
 }

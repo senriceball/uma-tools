@@ -285,7 +285,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	let a = standard.build(), b = compare.build();
 	let sign = 1;
 	const diff = [];
-	let min = Infinity, max = -1, estMean, estMedian, bestMeanDiff = Infinity, bestMedianDiff = Infinity;
+	let min = Infinity, max = -Infinity, estMean, estMedian, bestMeanDiff = Infinity, bestMedianDiff = Infinity;
 	let minrun, maxrun, meanrun, medianrun;
 	const sampleCutoff = Math.max(Math.floor(nsamples * 0.8), nsamples - 200);
 	for (let i = 0; i < nsamples; ++i) {
