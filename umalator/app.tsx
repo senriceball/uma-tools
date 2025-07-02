@@ -300,7 +300,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 			data.p[ai].push(s2.pos);
 			data.v[ai].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 		}
-		data.sk[1] = new Map(skillPos2);
+		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
 		skillPos2.clear();
 
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
@@ -313,11 +313,11 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 		const pos1 = s1.pos;
 		while (s1.pos < course.distance) {
 			s1.step(1/15);
-			data.t[0].push(s1.accumulatetime.t);
-			data.p[0].push(s1.pos);
-			data.v[0].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
+			data.t[bi].push(s1.accumulatetime.t);
+			data.p[bi].push(s1.pos);
+			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 		}
-		data.sk[0] = new Map(skillPos1);
+		data.sk[0] = new Map(skillPos1);  // NOT bi (NB. why not?)
 		skillPos1.clear();
 
 		// if `standard` is faster than `compare` then the former ends up going past the course distance
