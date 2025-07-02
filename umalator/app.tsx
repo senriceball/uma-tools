@@ -254,8 +254,7 @@ async function deserialize(hash) {
 }
 
 function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2: HorseState, options) {
-	// * 2 because that's the worst case number of runs we have to do if we always guess wrong about which uma is slower
-	const standard = new RaceSolverBuilder(nsamples * 2)
+	const standard = new RaceSolverBuilder(nsamples)
 		.seed(2615953739)
 		.course(course)
 		.mood(racedef.mood)
@@ -289,9 +288,10 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	let min = Infinity, max = -Infinity, estMean, estMedian, bestMeanDiff = Infinity, bestMedianDiff = Infinity;
 	let minrun, maxrun, meanrun, medianrun;
 	const sampleCutoff = Math.max(Math.floor(nsamples * 0.8), nsamples - 200);
+	let retry = false;
 	for (let i = 0; i < nsamples; ++i) {
-		const s1 = a.next().value as RaceSolver;
-		const s2 = b.next().value as RaceSolver;
+		const s1 = a.next(retry).value as RaceSolver;
+		const s2 = b.next(retry).value as RaceSolver;
 		const data = {t: [[], []], p: [[], []], v: [[], []], sk: [null,null]};
 
 		while (s2.pos < course.distance) {
@@ -329,7 +329,9 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 			[bi,ai] = [ai,bi];
 			sign *= -1;
 			--i;  // this one didnt count
+			retry = true;
 		} else {
+			retry = false;
 			const basinn = sign * (s2.pos - pos1) / 2.5;
 			diff.push(basinn);
 			if (basinn < min) {
