@@ -277,10 +277,27 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 		standard.useDefaultPacer(); compare.useDefaultPacer();
 	}
 	const skillPos1 = new Map(), skillPos2 = new Map();
-	standard.onSkillActivate((s,id) => id != 'asitame' && skillPos1.set(id, [s.pos, 0]))
-	standard.onSkillDeactivate((s,id) => id != 'asitame' && (skillPos1.get(id)[1] = s.pos));
-	compare.onSkillActivate((s,id) => id != 'asitame' && skillPos2.set(id, [s.pos, 0]))
-	compare.onSkillDeactivate((s,id) => id != 'asitame' && (skillPos2.get(id)[1] = s.pos));
+	function getActivator(skillSet) {
+		return function (s, id) {
+			if (id != 'asitame') {
+				if (!skillSet.has(id)) skillSet.set(id, []);
+				skillSet.get(id).push([s.pos, 0]);
+			}
+		};
+	}
+	function getDeactivator(skillSet) {
+		return function (s, id) {
+			if (id != 'asitame') {
+				const ar = skillSet.get(id);  // activation record
+				ar[ar.length-1][1] = s.pos;  // assume the first activation of a skill ends before the second one starts
+											 // don't think there's any way around this but it should always be true
+			}
+		};
+	}
+	standard.onSkillActivate(getActivator(skillPos1));
+	standard.onSkillDeactivate(getDeactivator(skillPos1));
+	compare.onSkillActivate(getActivator(skillPos2));
+	compare.onSkillDeactivate(getDeactivator(skillPos2));
 	let a = standard.build(), b = compare.build();
 	let ai = 1, bi = 0;
 	let sign = 1;
@@ -517,12 +534,12 @@ function App(props) {
 	const skillActivations = chartData == null ? [] : chartData.sk.flatMap((a,i) => {
 		return a.keys().flatMap(id => {
 			if (NO_SHOW.indexOf(skillmeta(id).iconId) > -1) return [];
-			else return [{
+			else return a.get(id).map(ar => ({
 				type: RegionDisplayType.Textbox,
 				color: colors[i],
 				text: skillnames[id][0],
-				regions: [{start: a.get(id)[0], end: a.get(id)[1]}]
-			}];
+				regions: [{start: ar[0], end: ar[1]}]
+			}));
 		}).toArray();
 	});
 
@@ -603,11 +620,11 @@ function App(props) {
 								</tbody>
 								{chartData.sk[0].size > 0 &&
 									<tbody>
-										{chartData.sk[0].entries().map(([id,pos]) =>
+										{chartData.sk[0].entries().map(([id,ars]) => ars.flatMap(pos =>
 											<tr>
 												<th>{skillnames[id][0]}</th>
 												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
-											</tr>).toArray()}
+											</tr>)).toArray()}
 									</tbody>}
 							</table>
 							<table>
@@ -618,11 +635,11 @@ function App(props) {
 								</tbody>
 								{chartData.sk[1].size > 0 &&
 									<tbody>
-										{chartData.sk[1].entries().map(([id,pos]) =>
+										{chartData.sk[1].entries().map(([id,ars]) => ars.flatMap(pos =>
 											<tr>
 												<th>{skillnames[id][0]}</th>
 												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
-											</tr>).toArray()}
+											</tr>)).toArray()}
 									</tbody>}
 							</table>
 						</div>
