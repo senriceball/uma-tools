@@ -59,7 +59,8 @@ export const STRINGS_ja = Object.freeze({
 		'27': '目標速度',
 		'28': 'レーン移動速度',
 		'31': '加速',
-		'37': 'Activate random gold skill'
+		'37': 'Activate random gold skill',
+		'42': 'スキルの効果時間上がり'
 	}),
 	'skilldetails': Object.freeze({
 		'accel': '{{n}}m/s²',
@@ -68,6 +69,7 @@ export const STRINGS_ja = Object.freeze({
 		'distance_type': Object.freeze(['', '短距離', 'マイル', '中距離', '長距離']),
 		'baseduration': '基準持続時間',
 		'effectiveduration': '効果時間（{{distance}}m）',
+		'durationincrease': '{{n}}倍',
 		'effects': '効果',
 		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'デビュー', 999: '毎日'}),
 		'ground_condition': Object.freeze(['', '良', '稍重', '重', '不良']),
@@ -125,7 +127,8 @@ export const STRINGS_en = Object.freeze({
 		'27': 'Target speed',
 		'28': 'Lane movement speed',
 		'31': 'Acceleration',
-		'37': 'Activate random gold skill'
+		'37': 'Activate random gold skill',
+		'42': 'Increase skill duration'
 	}),
 	'skilldetails': Object.freeze({
 		'accel': '{{n}}m/s²',
@@ -134,6 +137,7 @@ export const STRINGS_en = Object.freeze({
 		'distance_type': Object.freeze(['', 'Short', 'Mile', 'Medium', 'Long']),
 		'baseduration': 'Base duration:',
 		'effectiveduration': 'Effective duration ({{distance}}m):',
+		'durationincrease': '{{n}}×',
 		'effects': 'Effects:',
 		'grade': Object.freeze({100: 'G1', 200: 'G2', 300: 'G3', 400: 'OP', 700: 'Pre-OP', 800: 'Maiden', 900: 'Debut', 999: 'Daily races'}),
 		'ground_condition': Object.freeze(['', 'Good', 'Yielding', 'Soft', 'Heavy']),
@@ -372,7 +376,8 @@ const formatEffect = Object.freeze({
 	21: formatSpeed, 
 	22: formatSpeed,
 	27: formatSpeed,
-	31: n => <Text id="skilldetails.accel" plural={n} fields={{n: forceSign(n)}} />
+	31: n => <Text id="skilldetails.accel" plural={n} fields={{n: forceSign(n)}} />,
+	42: n => <Text id="skilldetails.durationincrease" plural={n} fields={{n}} />
 });
 
 export function ExpandedSkillDetails(props) {
