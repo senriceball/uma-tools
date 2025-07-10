@@ -13,6 +13,13 @@ found the latter easier.
 probably should involve un-splitting sirius unique, try to come up with a solution that also works for the bashin chart
 * TODO animations
 might be cool to animate e.g., the histogram bars popping up
+* TODO OCR to load umas from screenshots
+* TODO implement stamina/hp consumption
+** TODO implement in sim
+*** TODO also implement downhills
+**** TODO show downhill mode procs on race chart
+** TODO chart line
+** TODO show % max spurt rate, average excess hp, etc
 * miscellany
 ** DONE sort skills by disp_order from the db
 add to skill_meta.json
@@ -39,3 +46,7 @@ they DO both have to become desynced. need to look into this.
 ** DONE lock up after clicking min/max/etc in certain circumstances
 reproduce: https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPz2rDMAyH30VnH%2ByUQsitx7HLoMfRg0iUzDS2jP8QSsm7T%2FZaxvoGu0my9f0%2B3WHkEhO9TTAY3etegU%2FowkoJhqPWCkqiD07vRAGGHAspiDjSRDMMd3DMstgpWCIXXxkKNsL8RbHViTCxb2W2jh5fcaKapnehOzQVxCXPNlcLMPrQawOyHIgqsj%2BKRsrorEdpu2oVeGsRTXEpOT0fNpsmdtIddNuKmGm5CfZM%2FspFsJMVlh%2FpFLLNparAuaaVOOOf6Ql%2BAa%2Fjq11XyfwUW9E1cPm5pXu55Z9ccdn3b6%2Fl3rQJAgAA
 ** TODO seirios ≤4 popularity version is unselectable
+** TODO annoying issue where sometimes it shows no skills as having activated
+even though I think they probably did? unsure, needs to be investigated
+** TODO skills don't show on the chart if they're still active when the simulation ends
+the deactivate hook is never called
