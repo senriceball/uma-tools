@@ -15,10 +15,10 @@ probably should involve un-splitting sirius unique, try to come up with a soluti
 might be cool to animate e.g., the histogram bars popping up
 * TODO OCR to load umas from screenshots
 * TODO implement stamina/hp consumption
-** TODO implement in sim
+** DONE implement in sim
 *** TODO also implement downhills
 **** TODO show downhill mode procs on race chart
-** TODO chart line
+** DONE chart line
 ** TODO show % max spurt rate, average excess hp, etc
 * miscellany
 ** DONE sort skills by disp_order from the db

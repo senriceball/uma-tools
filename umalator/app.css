@@ -42,6 +42,12 @@ body {
 	padding: 24px;
 }
 
+#rtMouseOverBox > text {
+	paint-order: stroke;
+	stroke: #fff;
+	stroke-width: 3px;
+}
+
 #buttonsRow {
 	align-items: center;
 	display: flex;

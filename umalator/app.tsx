@@ -8,6 +8,7 @@ import { CourseHelpers } from '../uma-skill-tools/CourseData';
 import { RaceSolver } from '../uma-skill-tools/RaceSolver';
 import { RaceSolverBuilder } from '../uma-skill-tools/RaceSolverBuilder';
 import { Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skill-tools/RaceParameters';
+import type { GameHpPolicy } from '../uma-skill-tools/HpPolicy';
 
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
 import { SkillList, Skill, STRINGS_en as SKILL_STRINGS_en } from '../components/SkillList';
@@ -142,6 +143,7 @@ function VelocityLines(props) {
 	const data = props.data;
 	const x = d3.scaleLinear().domain([0,props.courseDistance]).range([0,props.width]);
 	const y = data && d3.scaleLinear().domain([0,d3.max(data.v, v => d3.max(v))]).range([props.height,0]);
+	const hpY = data && d3.scaleLinear().domain([0,d3.max(data.hp, hp => d3.max(hp))]).range([props.height,0]);
 	useEffect(function () {
 		if (axes.current == null) return;
 		const g = d3.select(axes.current);
@@ -152,6 +154,7 @@ function VelocityLines(props) {
 		}
 	}, [props.data, props.width, props.height]);
 	const colors = ['#2a77c5', '#c52a2a'];
+	const hpColors = ['#688aab', '#ab6868'];
 	return (
 		<Fragment>
 			<g transform={`translate(${props.xOffset},5)`}>
@@ -159,7 +162,11 @@ function VelocityLines(props) {
 					<path fill="none" stroke={colors[i]} stroke-width="2.5" d={
 						d3.line().x(j => x(data.p[i][j])).y(j => y(v[j]))(data.p[i].map((_,j) => j))
 					} />
-				)}
+				).concat(props.showHp ? data.hp.map((hp,i) =>
+					<path fill="none" stroke={hpColors[i]} stroke-width="2.5" d={
+						d3.line().x(j => x(data.p[i][j])).y(j => hpY(hp[j]))(data.p[i].map((_,j) => j))
+					} />
+				) : [])}
 			</g>
 			<g ref={axes} />
 		</Fragment>
@@ -309,13 +316,14 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	for (let i = 0; i < nsamples; ++i) {
 		const s1 = a.next(retry).value as RaceSolver;
 		const s2 = b.next(retry).value as RaceSolver;
-		const data = {t: [[], []], p: [[], []], v: [[], []], sk: [null,null]};
+		const data = {t: [[], []], p: [[], []], v: [[], []], hp: [[], []], sk: [null,null]};
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
 			data.t[ai].push(s2.accumulatetime.t);
 			data.p[ai].push(s2.pos);
 			data.v[ai].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
+			data.hp[ai].push((s2.hp as GameHpPolicy).hp);
 		}
 		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
 		skillPos2.clear();
@@ -325,6 +333,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 			data.t[bi].push(s1.accumulatetime.t);
 			data.p[bi].push(s1.pos);
 			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
+			data.hp[bi].push((s1.hp as GameHpPolicy).hp);
 		}
 		// run the rest of the way to have data for the chart
 		const pos1 = s1.pos;
@@ -333,6 +342,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 			data.t[bi].push(s1.accumulatetime.t);
 			data.p[bi].push(s1.pos);
 			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
+			data.hp[bi].push((s1.hp as GameHpPolicy).hp);
 		}
 		data.sk[0] = new Map(skillPos1);  // NOT bi (NB. why not?)
 		skillPos1.clear();
@@ -452,6 +462,7 @@ function App(props) {
 	const [racedef, setRaceDef] = useState(() => new RaceParams());
 	const [nsamples, setSamples] = useState(DEFAULT_SAMPLES);
 	const [usePosKeep, togglePosKeep] = useReducer((b,_) => !b, true);
+	const [showHp, toggleShowHp] = useReducer((b,_) => !b, false);
 	const [{courseId, results, runData, chartData, displaying}, setSimState] = useReducer(updateResultsState, EMPTY_RESULTS_STATE);
 	const setCourseId = setSimState;
 	const setResults = setSimState;
@@ -515,8 +526,8 @@ function App(props) {
 		document.getElementById('rtMouseOverBox').style.display = 'block';
 		const x = pos * course.distance;
 		const i0 = binSearch(chartData.p[0], x), i1 = binSearch(chartData.p[1], x);
-		document.getElementById('rtV1').textContent = chartData.v[0][i0].toFixed(2) + ' m/s  t=' + chartData.t[0][i0].toFixed(2) + ' s';
-		document.getElementById('rtV2').textContent = chartData.v[1][i1].toFixed(2) + ' m/s  t=' + chartData.t[1][i1].toFixed(2) + ' s';
+		document.getElementById('rtV1').textContent = `${chartData.v[0][i0].toFixed(2)} m/s  t=${chartData.t[0][i0].toFixed(2)} s  (${chartData.hp[0][i0].toFixed(0)} hp remaining)`;
+		document.getElementById('rtV2').textContent = `${chartData.v[1][i1].toFixed(2)} m/s  t=${chartData.t[1][i1].toFixed(2)} s  (${chartData.hp[1][i1].toFixed(0)} hp remaining)`;
 	}
 
 	function rtMouseLeave() {
@@ -555,7 +566,7 @@ function App(props) {
 			<IntlProvider definition={strings}>
 				<div id="topPane" class={chartData ? 'hasResults' : ''}>
 					<RaceTrack courseid={courseId} width={960} height={240} xOffset={20} yOffset={15} yExtra={20} mouseMove={rtMouseMove} mouseLeave={rtMouseLeave} regions={skillActivations}>
-						<VelocityLines data={chartData} courseDistance={course.distance} width={960} height={250} xOffset={20} />
+						<VelocityLines data={chartData} courseDistance={course.distance} width={960} height={250} xOffset={20} showHp={showHp} />
 						<g id="rtMouseOverBox" style="display:none">
 							<text id="rtV1" x="25" y="10" fill="#2a77c5" font-size="10px"></text>
 							<text id="rtV2" x="25" y="20" fill="#c52a2a" font-size="10px"></text>
@@ -567,6 +578,10 @@ function App(props) {
 						<div>
 							<label for="poskeep">Simulate pos keep</label>
 							<input type="checkbox" id="poskeep" checked={usePosKeep} onClick={togglePosKeep} />
+						</div>
+						<div>
+							<label for="showhp">Show HP consumption</label>
+							<input type="checkbox" id="showhp" checked={showHp} onClick={toggleShowHp} />
 						</div>
 						<button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
 						<a href="#" onClick={copyStateUrl}>Copy link</a>
