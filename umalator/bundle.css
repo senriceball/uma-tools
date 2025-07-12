@@ -761,7 +761,7 @@ body {
 }
 #infoTables tbody:last-child {
   border: none;
-  height: 180px;
+  height: 150px;
   overflow-x: hidden;
   overflow-y: auto;
 }

@@ -178,7 +178,7 @@ body {
 
 #infoTables tbody:last-child {
 	border: none;
-	height: 180px;  /* TODO this is a bit arbitrary */
+	height: 150px;  /* TODO this is a bit arbitrary */
 	overflow-x: hidden;
 	overflow-y: auto;
 }
