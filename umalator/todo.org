@@ -20,6 +20,8 @@ might be cool to animate e.g., the histogram bars popping up
 **** TODO show downhill mode procs on race chart
 ** DONE chart line
 ** TODO show % max spurt rate, average excess hp, etc
+possibly presented as another "tab" underneath the chart (tabbed with min/max/mean/median basinn gain tab)
+** TODO eventually, stamina calculator mode
 * miscellany
 ** DONE sort skills by disp_order from the db
 add to skill_meta.json
@@ -33,6 +35,7 @@ css table behavior is rather strange to me
 ** DONE text search for skill picker
 ** DONE presets for CM/LOH
 i.e. course, ground type, weather, etc
+** TODO show pace down on chart?
 * bugs
 ** DONE shorter skills can overlap longer skills if the shorter skill is placed first
 need to check if b.start/end is within in r in addition to r within b
@@ -50,3 +53,7 @@ reproduce: https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPz2rDMA
 even though I think they probably did? unsure, needs to be investigated
 ** TODO skills don't show on the chart if they're still active when the simulation ends
 the deactivate hook is never called
+** TODO all_corner_random bugged and sometimes seems to activate twice?
+reproduce:
+https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPwU7EMAxE%2F8XnHNJ2F0Fve0RckPaIOFitW6Jt4ihxVKHV%2FjtOACH4A262k3kzc4WJS8r0OMPY2Qd7ZyBk9HGjDOPRWgMl0zPnJ6IIo6RCBhJONNMC4xU8swp7A2viEirDwE4ob5TanAkzhzaK8%2FT1FWeqbvamdI9dBXGRxUlNAaCySFRh90cNkAW9C6hrX%2FNE3hu8hVuL5O%2BH3eWZvW6DbaqEQuu7As8ULlwUOztlhYlOUZyUGgLO1a2kBX9dT%2FAD%2BHu%2BuG1TzxdQ08PQwetni%2F7%2FthgOtcXtAwchUkMLAgAA
+(maximum)

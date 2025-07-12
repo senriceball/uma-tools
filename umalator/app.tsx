@@ -316,7 +316,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	for (let i = 0; i < nsamples; ++i) {
 		const s1 = a.next(retry).value as RaceSolver;
 		const s2 = b.next(retry).value as RaceSolver;
-		const data = {t: [[], []], p: [[], []], v: [[], []], hp: [[], []], sk: [null,null]};
+		const data = {t: [[], []], p: [[], []], v: [[], []], hp: [[], []], sk: [null,null], sdly: [0,0]};
 
 		while (s2.pos < course.distance) {
 			s2.step(1/15);
@@ -325,6 +325,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 			data.v[ai].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
 			data.hp[ai].push((s2.hp as GameHpPolicy).hp);
 		}
+		data.sdly[ai] = s2.startDelay;
 		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
 		skillPos2.clear();
 
@@ -344,6 +345,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
 			data.hp[bi].push((s1.hp as GameHpPolicy).hp);
 		}
+		data.sdly[bi] = s1.startDelay;
 		data.sk[0] = new Map(skillPos1);  // NOT bi (NB. why not?)
 		skillPos1.clear();
 
@@ -631,6 +633,7 @@ function App(props) {
 								<caption style="color:#2a77c5">Umamusume 1</caption>
 								<tbody>
 									<tr><th>Time to finish</th><td>{chartData.t[0][chartData.t[0].length-1].toFixed(4) + ' s'}</td></tr>
+									<tr><th>Start delay</th><td>{chartData.sdly[0].toFixed(4) + ' s'}</td></tr>
 									<tr><th>Top speed</th><td>{chartData.v[0].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
 								</tbody>
 								{chartData.sk[0].size > 0 &&
@@ -646,6 +649,7 @@ function App(props) {
 								<caption style="color:#c52a2a">Umamusume 2</caption>
 								<tbody>
 									<tr><th>Time to finish</th><td>{chartData.t[1][chartData.t[1].length-1].toFixed(4) + ' s'}</td></tr>
+									<tr><th>Start delay</th><td>{chartData.sdly[1].toFixed(4) + ' s'}</td></tr>
 									<tr><th>Top speed</th><td>{chartData.v[1].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
 								</tbody>
 								{chartData.sk[1].size > 0 &&
