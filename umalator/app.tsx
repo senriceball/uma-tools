@@ -286,7 +286,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	const skillPos1 = new Map(), skillPos2 = new Map();
 	function getActivator(skillSet) {
 		return function (s, id) {
-			if (id != 'asitame') {
+			if (id != 'asitame' && id != 'staminasyoubu') {
 				if (!skillSet.has(id)) skillSet.set(id, []);
 				skillSet.get(id).push([s.pos, 0]);
 			}
@@ -294,7 +294,7 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	}
 	function getDeactivator(skillSet) {
 		return function (s, id) {
-			if (id != 'asitame') {
+			if (id != 'asitame' && id != 'staminasyoubu') {
 				const ar = skillSet.get(id);  // activation record
 				ar[ar.length-1][1] = s.pos;  // assume the first activation of a skill ends before the second one starts
 											 // don't think there's any way around this but it should always be true
