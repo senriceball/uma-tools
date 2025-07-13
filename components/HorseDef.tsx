@@ -219,11 +219,11 @@ export function SkillSet(iterable): SortedSet<keyof typeof skills> {
 
 export class HorseState extends Record({
 	outfitId: '',
-	speed: 1850,
-	stamina: 1200,
-	power: 1500,
-	guts: 1200,
-	wisdom: 1300,
+	speed:   CC_GLOBAL ? 1200 : 1850,
+	stamina: CC_GLOBAL ? 1200 : 1200,
+	power:   CC_GLOBAL ? 800 : 1500,
+	guts:    CC_GLOBAL ? 400 : 1200,
+	wisdom:  CC_GLOBAL ? 400 : 1300,
 	strategy: 'Senkou',
 	distanceAptitude: 'S',
 	surfaceAptitude: 'A',
