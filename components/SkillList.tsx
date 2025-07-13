@@ -352,7 +352,7 @@ const FormatParser = getParser<ConditionFormatter,OpFormatter>(conditionFormatte
 	neq: CmpFormatter('!='),
 	lt: CmpFormatter('<'),
 	lte: CmpFormatter('<='),
-	gt: CmpFormatter('<'),
+	gt: CmpFormatter('>'),
 	gte: CmpFormatter('>=')
 });
 
