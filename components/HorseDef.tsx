@@ -174,6 +174,16 @@ export function AptitudeSelect(props){
 }
 
 export function StrategySelect(props) {
+	if (CC_GLOBAL) {
+		return (
+			<select class="horseStrategySelect" value={props.s} tabindex={props.tabindex} onInput={(e) => props.setS(e.currentTarget.value)}>
+				<option value="Nige">Front Runner</option>
+				<option value="Senkou">Pace Chaser</option>
+				<option value="Sasi">Late Closer</option>
+				<option value="Oikomi">Tail End</option>
+			</select>
+		);
+	}
 	return (
 		<select class="horseStrategySelect" value={props.s} tabindex={props.tabindex} onInput={(e) => props.setS(e.currentTarget.value)}>
 			<option value="Nige">逃げ</option>
@@ -306,7 +316,7 @@ export function HorseDef(props) {
 				<div class="horseParamHeader"><img src="/uma-tools/icons/status_01.png" /><span>Stamina</span></div>
 				<div class="horseParamHeader"><img src="/uma-tools/icons/status_02.png" /><span>Power</span></div>
 				<div class="horseParamHeader"><img src="/uma-tools/icons/status_03.png" /><span>Guts</span></div>
-				<div class="horseParamHeader"><img src="/uma-tools/icons/status_04.png" /><span>Wisdom</span></div>
+				<div class="horseParamHeader"><img src="/uma-tools/icons/status_04.png" /><span>{CC_GLOBAL?'Wit':'Wisdom'}</span></div>
 				<Stat value={state.speed} change={setter('speed')} tabindex={tabnext()} />
 				<Stat value={state.stamina} change={setter('stamina')} tabindex={tabnext()} />
 				<Stat value={state.power} change={setter('power')} tabindex={tabnext()} />

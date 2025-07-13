@@ -279,7 +279,10 @@ function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2
 	const sort = (a,b) => commonIdx(a) - commonIdx(b) || +a - +b;
 	uma1.skills.toArray().sort(sort).forEach(id => standard.addSkill(id));
 	uma2.skills.toArray().sort(sort).forEach(id => compare.addSkill(id));
-	standard.withAsiwotameru(); compare.withAsiwotameru();
+	if (!CC_GLOBAL) {
+		standard.withAsiwotameru().withStaminaSyoubu();
+		compare.withAsiwotameru().withStaminaSyoubu();
+	}
 	if (options.usePosKeep) {
 		standard.useDefaultPacer(); compare.useDefaultPacer();
 	}
@@ -618,10 +621,10 @@ function App(props) {
 								</tfoot>
 								<tbody>
 									<tr>
-										<td>{results[0].toFixed(2)}<span class="unit-basinn">バ身</span></td>
-										<td>{results[results.length-1].toFixed(2)}<span class="unit-basinn">バ身</span></td>
-										<td>{mean.toFixed(2)}<span class="unit-basinn">バ身</span></td>
-										<td>{median.toFixed(2)}<span class="unit-basinn">バ身</span></td>
+										<td>{results[0].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
+										<td>{results[results.length-1].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
+										<td>{mean.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
+										<td>{median.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
 									</tr>
 								</tbody>
 							</table>
