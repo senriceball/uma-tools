@@ -65,6 +65,16 @@ function TimeOfDaySelect(props) {
 }
 
 function GroundSelect(props) {
+	if (CC_GLOBAL) {
+		return (
+			<select class="groundSelect" value={props.value} onInput={(e) => props.set(+e.currentTarget.value)}>
+				<option value="1">Firm</option>
+				<option value="2">Good</option>
+				<option value="3">Soft</option>
+				<option value="4">Heavy</option>
+			</select>
+		);
+	}
 	return (
 		<select class="groundSelect" value={props.value} onInput={(e) => props.set(+e.currentTarget.value)}>
 			<option value="1">良</option>
@@ -98,8 +108,8 @@ function SeasonSelect(props) {
 	}
 	return (
 		<div class="seasonSelect" onClick={click}>
-			{Array(5).fill(0).map((_,i) =>
-				<img src={`/uma-tools/icons/utx_txt_season_0${i}.png`} title={SKILL_STRINGS_en.skilldetails.season[i+1]}
+			{Array(4 + +!CC_GLOBAL /* global doenst have late spring for some reason */).fill(0).map((_,i) =>
+				<img src={`/uma-tools/icons${CC_GLOBAL?'/global':''}/utx_txt_season_0${i}.png`} title={SKILL_STRINGS_en.skilldetails.season[i+1]}
 					class={i+1 == props.value ? 'selected' : ''} data-season={i+1} />)}
 		</div>
 	);
@@ -450,6 +460,9 @@ const presets = [
 
 function RacePresets(props) {
 	const id = useId();
+	if (CC_GLOBAL) {
+		return <Fragment></Fragment>;
+	}
 	return (
 		<Fragment>
 			<label for={id}>Preset:</label>
@@ -621,10 +634,10 @@ function App(props) {
 								</tfoot>
 								<tbody>
 									<tr>
-										<td>{results[0].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
-										<td>{results[results.length-1].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
-										<td>{mean.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
-										<td>{median.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'L':'バ身'}</span></td>
+										<td>{results[0].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+										<td>{results[results.length-1].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+										<td>{mean.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+										<td>{median.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
 									</tr>
 								</tbody>
 							</table>
