@@ -36,6 +36,11 @@ css table behavior is rather strange to me
 ** DONE presets for CM/LOH
 i.e. course, ground type, weather, etc
 ** TODO show pace down on chart?
+** TODO reduce bundle size
+- remove normal immutable.js and only used immutable-sorted (which also has Record, etc)
+- selective imports for d3
+- what else?
+** TODO sprite sheet instead of loading individual images for icons and stuff
 * bugs
 ** DONE shorter skills can overlap longer skills if the shorter skill is placed first
 need to check if b.start/end is within in r in addition to r within b
