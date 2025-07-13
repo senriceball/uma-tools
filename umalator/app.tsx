@@ -430,8 +430,8 @@ function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | strin
 			courseId: state.courseId,
 			results: o.results,
 			runData: o.runData,
-			chartData: o.runData.meanrun,
-			displaying: 'meanrun'
+			chartData: o.runData[state.displaying || 'meanrun'],
+			displaying: state.displaying || 'meanrun'
 		};
 	}
 }
