@@ -162,7 +162,7 @@ function VelocityLines(props) {
 		if (data) {
 			g.append('g').attr('transform', `translate(${props.xOffset},4)`).call(d3.axisLeft(y));
 		}
-	}, [props.data, props.width, props.height]);
+	}, [props.data, props.courseDistance, props.width, props.height]);
 	const colors = ['#2a77c5', '#c52a2a'];
 	const hpColors = ['#688aab', '#ab6868'];
 	return (
