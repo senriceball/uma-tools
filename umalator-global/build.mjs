@@ -42,6 +42,15 @@ const mockAssert = {
 	}
 };
 
+const redirectTable = {
+	name: 'redirectTable',
+	setup(build) {
+		build.onResolve({filter: /^@tanstack\//}, args => ({
+			path: path.join(dirname, '..', 'vendor', args.path.slice(10), 'index.ts')
+		}));
+	}
+};
+
 await esbuild.build({
 	entryPoints: ['../umalator/app.tsx'],
 	bundle: true,
@@ -49,5 +58,5 @@ await esbuild.build({
 	outfile: 'bundle.js',
 	define: {CC_DEBUG: debug.toString(), CC_GLOBAL: 'true'},
 	external: ['*.ttf'],
-	plugins: [redirectData, mockAssert]
+	plugins: [redirectData, mockAssert, redirectTable]
 });

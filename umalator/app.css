@@ -121,6 +121,10 @@ body {
 	justify-content: center;
 }
 
+#resultsPane.mode-chart {
+	width: 980px;
+}
+
 #resultsHelp {
 	color: rgb(121, 64, 22);
 	font-size: 0.7em;

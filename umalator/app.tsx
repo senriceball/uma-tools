@@ -5,17 +5,19 @@ import { Record } from 'immutable';
 import * as d3 from 'd3';
 
 import { CourseHelpers } from '../uma-skill-tools/CourseData';
-import { RaceSolver } from '../uma-skill-tools/RaceSolver';
-import { RaceSolverBuilder } from '../uma-skill-tools/RaceSolverBuilder';
-import { Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skill-tools/RaceParameters';
+import { RaceParameters, Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skill-tools/RaceParameters';
 import type { GameHpPolicy } from '../uma-skill-tools/HpPolicy';
 
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
 import { SkillList, Skill, STRINGS_en as SKILL_STRINGS_en } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
 import { HorseState, SkillSet, HorseDef, horseDefTabs } from '../components/HorseDef';
-import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common.ts';
+import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 
+import { runComparison } from './compare';
+import { getActivateableSkills, runBasinnChart, BasinnChart } from './BasinnChart';
+
+import skilldata from '../uma-skill-tools/data/skill_data.json';
 import skillnames from '../uma-skill-tools/data/skillnames.json';
 import skill_meta from '../skill_meta.json';
 
@@ -199,6 +201,24 @@ class RaceParams extends Record({
 	grade: Grade.G1
 }) {}
 
+const ORDER_RANGE_FOR_STRATEGY = Object.freeze({
+	'Nige': [1,1],
+	'Senkou': [2,4],
+	'Sasi': [5,9],
+	'Oikomi': [5,9],
+	'Oonige': [1,1]
+});
+
+function racedefToParams({mood, ground, weather, season, time, grade}: RaceParams, includeOrder?: string): RaceParameters {
+	return {
+		mood, groundCondition: ground, weather, season, time, grade,
+		popularity: 1,
+		skillId: '',
+		orderRange: includeOrder != null ? ORDER_RANGE_FOR_STRATEGY[includeOrder] : null,
+		numUmas: 9
+	};
+}
+
 async function serialize(courseId: number, nsamples: number, usePosKeep: boolean, racedef: RaceParams, uma1: HorseState, uma2: HorseState) {
 	const json = JSON.stringify({
 		courseId,
@@ -270,143 +290,6 @@ async function deserialize(hash) {
 	}
 }
 
-function runComparison(nsamples: number, course, racedef, uma1: HorseState, uma2: HorseState, options) {
-	const standard = new RaceSolverBuilder(nsamples)
-		.seed(2615953739)
-		.course(course)
-		.mood(racedef.mood)
-		.ground(racedef.ground)
-		.weather(racedef.weather)
-		.season(racedef.season)
-		.time(racedef.time);
-	const compare = standard.fork();
-	standard.horse(uma1);
-	compare.horse(uma2);
-	// ensure skills common to the two umas are added in the same order regardless of what additional skills they have
-	// this is important to make sure the rng for their activations is synced
-	const common = uma1.skills.intersect(uma2.skills).toArray().sort((a,b) => +a - +b);
-	const commonIdx = (id) => { let i = common.indexOf(id); return i > -1 ? i : common.length; };
-	const sort = (a,b) => commonIdx(a) - commonIdx(b) || +a - +b;
-	uma1.skills.toArray().sort(sort).forEach(id => standard.addSkill(id));
-	uma2.skills.toArray().sort(sort).forEach(id => compare.addSkill(id));
-	if (!CC_GLOBAL) {
-		standard.withAsiwotameru().withStaminaSyoubu();
-		compare.withAsiwotameru().withStaminaSyoubu();
-	}
-	if (options.usePosKeep) {
-		standard.useDefaultPacer(); compare.useDefaultPacer();
-	}
-	const skillPos1 = new Map(), skillPos2 = new Map();
-	function getActivator(skillSet) {
-		return function (s, id) {
-			if (id != 'asitame' && id != 'staminasyoubu') {
-				if (!skillSet.has(id)) skillSet.set(id, []);
-				skillSet.get(id).push([s.pos, 0]);
-			}
-		};
-	}
-	function getDeactivator(skillSet) {
-		return function (s, id) {
-			if (id != 'asitame' && id != 'staminasyoubu') {
-				const ar = skillSet.get(id);  // activation record
-				ar[ar.length-1][1] = s.pos;  // assume the first activation of a skill ends before the second one starts
-											 // don't think there's any way around this but it should always be true
-			}
-		};
-	}
-	standard.onSkillActivate(getActivator(skillPos1));
-	standard.onSkillDeactivate(getDeactivator(skillPos1));
-	compare.onSkillActivate(getActivator(skillPos2));
-	compare.onSkillDeactivate(getDeactivator(skillPos2));
-	let a = standard.build(), b = compare.build();
-	let ai = 1, bi = 0;
-	let sign = 1;
-	const diff = [];
-	let min = Infinity, max = -Infinity, estMean, estMedian, bestMeanDiff = Infinity, bestMedianDiff = Infinity;
-	let minrun, maxrun, meanrun, medianrun;
-	const sampleCutoff = Math.max(Math.floor(nsamples * 0.8), nsamples - 200);
-	let retry = false;
-	for (let i = 0; i < nsamples; ++i) {
-		const s1 = a.next(retry).value as RaceSolver;
-		const s2 = b.next(retry).value as RaceSolver;
-		const data = {t: [[], []], p: [[], []], v: [[], []], hp: [[], []], sk: [null,null], sdly: [0,0]};
-
-		while (s2.pos < course.distance) {
-			s2.step(1/15);
-			data.t[ai].push(s2.accumulatetime.t);
-			data.p[ai].push(s2.pos);
-			data.v[ai].push(s2.currentSpeed + (s2.modifiers.currentSpeed.acc + s2.modifiers.currentSpeed.err));
-			data.hp[ai].push((s2.hp as GameHpPolicy).hp);
-		}
-		data.sdly[ai] = s2.startDelay;
-		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
-		skillPos2.clear();
-
-		while (s1.accumulatetime.t < s2.accumulatetime.t) {
-			s1.step(1/15);
-			data.t[bi].push(s1.accumulatetime.t);
-			data.p[bi].push(s1.pos);
-			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
-			data.hp[bi].push((s1.hp as GameHpPolicy).hp);
-		}
-		// run the rest of the way to have data for the chart
-		const pos1 = s1.pos;
-		while (s1.pos < course.distance) {
-			s1.step(1/15);
-			data.t[bi].push(s1.accumulatetime.t);
-			data.p[bi].push(s1.pos);
-			data.v[bi].push(s1.currentSpeed + (s1.modifiers.currentSpeed.acc + s1.modifiers.currentSpeed.err));
-			data.hp[bi].push((s1.hp as GameHpPolicy).hp);
-		}
-		data.sdly[bi] = s1.startDelay;
-		data.sk[0] = new Map(skillPos1);  // NOT bi (NB. why not?)
-		skillPos1.clear();
-
-		// if `standard` is faster than `compare` then the former ends up going past the course distance
-		// this is not in itself a problem, but it would overestimate the difference if for example a skill
-		// continues past the end of the course. i feel like there are probably some other situations where it would
-		// be inaccurate also. if this happens we have to swap them around and run it again.
-		if (s2.pos < pos1) {
-			[b,a] = [a,b];
-			[bi,ai] = [ai,bi];
-			sign *= -1;
-			--i;  // this one didnt count
-			retry = true;
-		} else {
-			retry = false;
-			const basinn = sign * (s2.pos - pos1) / 2.5;
-			diff.push(basinn);
-			if (basinn < min) {
-				min = basinn;
-				minrun = data;
-			}
-			if (basinn > max) {
-				max = basinn;
-				maxrun = data;
-			}
-			if (i == sampleCutoff) {
-				diff.sort((a,b) => a - b);
-				estMean = diff.reduce((a,b) => a + b) / diff.length;
-				const mid = Math.floor(diff.length / 2);
-				estMedian = mid > 0 && diff.length % 2 == 0 ? (diff[mid-1] + diff[mid]) / 2 : diff[mid];
-			}
-			if (i >= sampleCutoff) {
-				const meanDiff = Math.abs(basinn - estMean), medianDiff = Math.abs(basinn - estMedian);
-				if (meanDiff < bestMeanDiff) {
-					bestMeanDiff = meanDiff;
-					meanrun = data;
-				}
-				if (medianDiff < bestMedianDiff) {
-					bestMedianDiff = medianDiff;
-					medianrun = data;
-				}
-			}
-		}
-	}
-	diff.sort((a,b) => a - b);
-	return {results: diff, runData: {minrun, maxrun, meanrun, medianrun}};
-}
-
 const EMPTY_RESULTS_STATE = {courseId: DEFAULT_COURSE_ID, results: [], runData: null, chartData: null, displaying: ''};
 function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | string | {results: any, runData: any}) {
 	if (typeof o == 'number') {
@@ -436,7 +319,7 @@ function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | strin
 	}
 }
 
-const enum EventType { CM, LOH };
+const enum EventType { CM, LOH }
 
 const presets = [
 	{type: EventType.LOH, date: '2025-08', courseId: 10105, season: Season.Summer, Time: Time.Midday},
@@ -474,6 +357,28 @@ function RacePresets(props) {
 	);
 }
 
+const baseSkillsToTest = Object.keys(skilldata).filter(id => skilldata[id].rarity < 3);
+
+const enum Mode { Compare, Chart }
+const enum UiStateMsg { SetModeCompare, SetModeChart, SetCurrentIdx0, SetCurrentIdx1, ToggleExpand }
+
+const DEFAULT_UI_STATE = {mode: Mode.Compare, currentIdx: 0, expanded: false};
+
+function nextUiState(state: typeof DEFAULT_UI_STATE, msg: UiStateMsg) {
+	switch (msg) {
+		case UiStateMsg.SetModeCompare:
+			return {...state, mode: Mode.Compare};
+		case UiStateMsg.SetModeChart:
+			return {...state, mode: Mode.Chart, currentIdx: 0, expanded: false};
+		case UiStateMsg.SetCurrentIdx0:
+			return {...state, currentIdx: 0};
+		case UiStateMsg.SetCurrentIdx1:
+			return {...state, currentIdx: 1};
+		case UiStateMsg.ToggleExpand:
+			return {...state, expanded: !state.expanded};
+	}
+}
+
 function App(props) {
 	//const [language, setLanguage] = useLanguageSelect();
 	const [skillsOpen, setSkillsOpen] = useState(false);
@@ -486,6 +391,8 @@ function App(props) {
 	const setResults = setSimState;
 	const setChartData = setSimState;
 
+	const [tableRows, setTableRows] = useState([]);
+
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
 	}
@@ -494,8 +401,9 @@ function App(props) {
 
 	const [uma1, setUma1] = useState(() => new HorseState());
 	const [uma2, setUma2] = useState(() => new HorseState());
-	const [currentIdx, setCurrentIdx] = useState(0);
-	const [expanded, toggleExpand] = useReducer((s, e: Event) => { e.stopPropagation(); return !s; }, false);
+
+	const [{mode, currentIdx, expanded}, updateUiState] = useReducer(nextUiState, DEFAULT_UI_STATE);
+	function toggleExpand(e: Event) { e.stopPropagation(); updateUiState(UiStateMsg.ToggleExpand); }
 
 	function loadState() {
 		if (window.location.hash) {
@@ -536,7 +444,13 @@ function App(props) {
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
 	function doComparison() {
-		setResults(runComparison(nsamples, course, racedef, uma1, uma2, {usePosKeep}));
+		setResults(runComparison(nsamples, course, racedefToParams(racedef), uma1, uma2, {usePosKeep}));
+	}
+
+	function doBasinnChart() {
+		const params = racedefToParams(racedef, uma1.strategy);
+		const skills = getActivateableSkills(baseSkillsToTest.filter(s => !uma1.skills.has(s)), uma1, course, params);
+		setTableRows(runBasinnChart(skills, 10, course, params, uma1, {usePosKeep}));
 	}
 
 	function rtMouseMove(pos) {
@@ -574,8 +488,8 @@ function App(props) {
 
 	const umaTabs = (
 		<Fragment>
-			<div class={`umaTab ${currentIdx == 0 ? 'selected' : ''}`} onClick={() => setCurrentIdx(0)}>Umamusume 1</div>
-			<div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => setCurrentIdx(1)}>Umamusume 2<div id="expandBtn" title="Expand panel" onClick={toggleExpand}>⟩</div></div>
+			<div class={`umaTab ${currentIdx == 0 ? 'selected' : ''}`} onClick={() => updateUiState(UiStateMsg.SetCurrentIdx0)}>Umamusume 1</div>
+			{mode == Mode.Compare && <div class={`umaTab ${currentIdx == 1 ? 'selected' : ''}`} onClick={() => updateUiState(UiStateMsg.SetCurrentIdx1)}>Umamusume 2<div id="expandBtn" title="Expand panel" onClick={toggleExpand}>⟩</div></div>}
 		</Fragment>
 	);
 
@@ -591,6 +505,13 @@ function App(props) {
 						</g>
 					</RaceTrack>
 					<div id="runPane">
+						<fieldset>
+							<legend>Mode:</legend>
+							<input type="radio" id="mode-compare" name="mode" value="compare" checked={mode == Mode.Compare} onClick={() => updateUiState(UiStateMsg.SetModeCompare)} />
+							<label for="mode-compare">Compare</label>
+							<input type="radio" id="mode-chart" name="mode" value="chart" checked={mode == Mode.Chart} onClick={() => updateUiState(UiStateMsg.SetModeChart)} />
+							<label for="mode-chart">Skill chart</label>
+						</fieldset>
 						<label for="nsamples">Samples:</label>
 						<input type="number" id="nsamples" min="1" max="10000" value={nsamples} onInput={(e) => setSamples(+e.currentTarget.value)} />
 						<div>
@@ -601,7 +522,11 @@ function App(props) {
 							<label for="showhp">Show HP consumption</label>
 							<input type="checkbox" id="showhp" checked={showHp} onClick={toggleShowHp} />
 						</div>
-						<button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
+						{
+							mode == Mode.Compare
+							? <button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
+							: <button id="run" onClick={doBasinnChart} tabindex={1}>RUN</button>
+						}
 						<a href="#" onClick={copyStateUrl}>Copy link</a>
 							<RacePresets set={(courseId, racedef) => { setCourseId(courseId); setRaceDef(racedef); }} />
 					</div>
@@ -616,9 +541,9 @@ function App(props) {
 						<SeasonSelect value={racedef.season} set={racesetter('season')} />
 					</div>
 				</div>
-				{results.length > 0 &&
+				{mode == Mode.Compare && results.length > 0 &&
 					<div id="resultsPaneWrapper">
-						<div id="resultsPane">
+						<div id="resultsPane" class="mode-compare">
 							<table id="resultsSummary">
 								<tfoot>
 									<tr>
@@ -680,6 +605,13 @@ function App(props) {
 						</div>
 					</div>
 				}
+				{mode == Mode.Chart && tableRows.length > 0 &&
+					<div id="resultsPaneWrapper">
+						<div id="resultsPane" class="mode-chart">
+							<BasinnChart data={tableRows} />
+						</div>
+					</div>
+				}
 				{expanded && <div id="umaPane" />}
 				<div id={expanded ? 'umaOverlay' : 'umaPane'}>
 					<div class={!expanded && currentIdx == 0 ? 'selected' : ''}>
@@ -692,11 +624,11 @@ function App(props) {
 							<div id="copyUmaToRight" onClick={copyUmaToRight} />
 							<div id="copyUmaToLeft" onClick={copyUmaToLeft} />
 						</div>}
-					<div class={!expanded && currentIdx == 1 ? 'selected' : ''}>
+					{mode == Mode.Compare && <div class={!expanded && currentIdx == 1 ? 'selected' : ''}>
 						<HorseDef key={uma2.outfitId} state={uma2} setState={setUma2} courseDistance={course.distance} tabstart={() => 4 + horseDefTabs()}>
 							{expanded ? 'Umamusume 2' : umaTabs}
 						</HorseDef>
-					</div>
+					</div>}
 					{expanded && <div id="closeUmaOverlay" title="Close panel" onClick={toggleExpand}>✕</div>}
 				</div>
 			</IntlProvider>
