@@ -249,11 +249,11 @@ body {
 }
 
 .umaTab:first-child {
-	border-radius: 12px 0 0 0;
+	border-top-left-radius: 12px;
 }
 
 .umaTab:last-child {
-	border-radius: 0 12px 0 0;
+	border-top-right-radius: 12px;
 }
 
 .umaTab.selected {
