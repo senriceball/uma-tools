@@ -449,7 +449,7 @@ function App(props) {
 
 	function doBasinnChart() {
 		const params = racedefToParams(racedef, uma1.strategy);
-		const skills = getActivateableSkills(baseSkillsToTest.filter(s => !uma1.skills.has(s)), uma1, course, params);
+		const skills = getActivateableSkills(baseSkillsToTest.filter(s => !uma1.skills.has(s) && (s[0] != '9' || !uma1.skills.has('1' + s.slice(1)))), uma1, course, params);
 		setTableRows(runBasinnChart(skills, 10, course, params, uma1, {usePosKeep}));
 	}
 
