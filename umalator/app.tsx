@@ -17,6 +17,8 @@ import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 import { runComparison } from './compare';
 import { getActivateableSkills, runBasinnChart, BasinnChart } from './BasinnChart';
 
+import { initTelemetry, postEvent } from './telemetry';
+
 import skilldata from '../uma-skill-tools/data/skill_data.json';
 import skillnames from '../uma-skill-tools/data/skillnames.json';
 import skill_meta from '../skill_meta.json';
@@ -301,6 +303,7 @@ function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | strin
 			displaying: ''
 		};
 	} else if (typeof o == 'string') {
+		postEvent('setChartData', {display: o});
 		return {
 			courseId: state.courseId,
 			results: state.results,
@@ -444,10 +447,12 @@ function App(props) {
 	Object.keys(skillnames).forEach(id => strings.skillnames[id] = skillnames[id][langid]);
 
 	function doComparison() {
+		postEvent('doComparison', {});
 		setResults(runComparison(nsamples, course, racedefToParams(racedef), uma1, uma2, {usePosKeep}));
 	}
 
 	function doBasinnChart() {
+		postEvent('doBasinnChart', {});
 		const params = racedefToParams(racedef, uma1.strategy);
 		const skills = getActivateableSkills(baseSkillsToTest.filter(s => !uma1.skills.has(s) && (s[0] != '9' || !uma1.skills.has('1' + s.slice(1)))), uma1, course, params);
 		setTableRows(runBasinnChart(skills, 10, course, params, uma1, {usePosKeep}));
@@ -636,4 +641,5 @@ function App(props) {
 	);
 }
 
+initTelemetry();
 render(<App lang="en-ja" />, document.getElementById('app'));
