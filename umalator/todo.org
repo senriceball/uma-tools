@@ -22,6 +22,26 @@ might be cool to animate e.g., the histogram bars popping up
 ** TODO show % max spurt rate, average excess hp, etc
 possibly presented as another "tab" underneath the chart (tabbed with min/max/mean/median basinn gain tab)
 ** TODO eventually, stamina calculator mode
+* TODO unique skill levels
+also implement unique scaling in sim
+* TODO run compare simulator in worker
+should probably not be run on the main UI thread
+* TODO cleanup
+** TODO build system
+convert non-global to use build.mjs. refactor shared parts (most of it except the plugins and defines) to a common file.
+skill visualizer should also be changed to use this, and global skill visualizer can share the data intercept plugin
+with global umalator.
+** TODO proper i18n
+i.e., remove the stupid CC_GLOBAL?'string1':'string2' bits in favor of the preact-i18n system used everywhere else
+** DONE change how order is handled
+it might be preferable to add an `order` member in RaceParameters to pass to skill conditions. the advantage here is we
+could filter out skills based on order more easily for the bashin chart instead of the kind of nasty cludge right now.
+(since we already filter out skills that place no triggers)
+** TODO mark various assert functions as pure in esbuild
+i.e. like CourseHelpers.assertIsPhase and stuff
+
+probably requires rewriting CourseHelpers.isSortedByStart to assertIsSortedByStart or something (I don't think that
+function is used in any non-assertion contexts anyway)
 * miscellany
 ** DONE sort skills by disp_order from the db
 add to skill_meta.json
@@ -59,6 +79,9 @@ even though I think they probably did? unsure, needs to be investigated
 ** TODO skills don't show on the chart if they're still active when the simulation ends
 the deactivate hook is never called
 ** TODO all_corner_random bugged and sometimes seems to activate twice?
-reproduce:
-https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPwU7EMAxE%2F8XnHNJ2F0Fve0RckPaIOFitW6Jt4ihxVKHV%2FjtOACH4A262k3kzc4WJS8r0OMPY2Qd7ZyBk9HGjDOPRWgMl0zPnJ6IIo6RCBhJONNMC4xU8swp7A2viEirDwE4ob5TanAkzhzaK8%2FT1FWeqbvamdI9dBXGRxUlNAaCySFRh90cNkAW9C6hrX%2FNE3hu8hVuL5O%2BH3eWZvW6DbaqEQuu7As8ULlwUOztlhYlOUZyUGgLO1a2kBX9dT%2FAD%2BHu%2BuG1TzxdQ08PQwetni%2F7%2FthgOtcXtAwchUkMLAgAA
+reproduce: https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPwU7EMAxE%2F8XnHNJ2F0Fve0RckPaIOFitW6Jt4ihxVKHV%2FjtOACH4A262k3kzc4WJS8r0OMPY2Qd7ZyBk9HGjDOPRWgMl0zPnJ6IIo6RCBhJONNMC4xU8swp7A2viEirDwE4ob5TanAkzhzaK8%2FT1FWeqbvamdI9dBXGRxUlNAaCySFRh90cNkAW9C6hrX%2FNE3hu8hVuL5O%2BH3eWZvW6DbaqEQuu7As8ULlwUOztlhYlOUZyUGgLO1a2kBX9dT%2FAD%2BHu%2BuG1TzxdQ08PQwetni%2F7%2FthgOtcXtAwchUkMLAgAA
 (maximum)
+** DONE greens aren't accounted for in hp calculation
+HpPolicy is instantiated before greens are activated; need some kind of explicit init(horse) method to set hp after the
+first round of skill activation
+reproduce: https://alpha123.github.io/uma-tools/umalator-global/#H4sIAAAAAAAACtWOzUoEMRCE36XPOSRRB5nbHkUQwaPsIUx6xuDkh6TDIMu8u937g%2BgbeKsuur6qE0y514ZPHkajBz0oSM3FsmKD8UFrBb3ha27PiAVGqh0VVDehxxnGE8ScOWgVLDX3JAwFGzr6wHrWDV3L6fxBIeL11XmUNr0zPTojoNxpDiQrADhWEAVmZUAjF0Nyt7PkTeCPopdOPPNe5Baaz%2FF6NKqOcPli2ktYkIk%2BMCZNeCgUqEs%2FvElRr7P75R7gJ%2F7X%2Fgzryn3vx8tw%2B%2B%2BGAw%2FRd5YtFuYmrLkIM2gDx33%2FBpiw3qEUAgAA
