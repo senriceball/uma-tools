@@ -1,12 +1,13 @@
 import { h, Fragment } from 'preact';
 import { useState, useReducer, useMemo, useEffect, useRef } from 'preact/hooks';
 import { IntlProvider, Text, Localizer } from 'preact-i18n';
-import { Record, Set as ImmSet } from 'immutable';
-import { SortedSet } from 'immutable-sorted';
+import { Set as ImmSet } from 'immutable';
 
 import { SkillList, Skill, ExpandedSkillDetails } from '../components/SkillList';
 
 import { HorseParameters } from '../uma-skill-tools/HorseTypes';
+
+import { SkillSet, HorseState } from './HorseDefTypes';
 
 import './HorseDef.css';
 
@@ -207,29 +208,6 @@ function uniqueSkillForUma(oid: typeof umaAltIds[number]): keyof typeof skills {
 	assertIsSkill(sid);
 	return sid;
 }
-
-function skillComparator(a, b) {
-	const x = skill_meta[a].order, y = skill_meta[b].order;
-	return +(y < x) - +(x < y) || +(b < a) - +(a < b);
-}
-
-export function SkillSet(iterable): SortedSet<keyof typeof skills> {
-	return SortedSet(iterable, skillComparator);
-}
-
-export class HorseState extends Record({
-	outfitId: '',
-	speed:   CC_GLOBAL ? 1200 : 1850,
-	stamina: CC_GLOBAL ? 1200 : 1200,
-	power:   CC_GLOBAL ? 800 : 1500,
-	guts:    CC_GLOBAL ? 400 : 1200,
-	wisdom:  CC_GLOBAL ? 400 : 1300,
-	strategy: 'Senkou',
-	distanceAptitude: 'S',
-	surfaceAptitude: 'A',
-	strategyAptitude: 'A',
-	skills: SkillSet([])
-}) {}
 
 let totalTabs = 0;
 export function horseDefTabs() {

@@ -1,0 +1,66 @@
+import type { CourseData } from '../uma-skill-tools/CourseData';
+import type { RaceParameters } from '../uma-skill-tools/RaceParameters';
+
+import { HorseState, SkillSet } from '../components/HorseDefTypes';
+import { runComparison } from './compare';
+
+function mergeResults(results1, results2) {
+	console.assert(results1.id == results2.id, `mergeResults: ${results1.id} != ${results2.id}`);
+	const n1 = results1.results.length, n2 = results2.results.length;
+	const combinedResults = results1.results.concat(results2.results).sort((a,b) => a - b);
+	const combinedMean = (results1.mean * n1 + results2.mean * n2) / (n1 + n2);
+	const mid = Math.floor(combinedResults.length / 2);
+	const newMedian = combinedResults.length % 2 == 0 ? (combinedResults[mid-1] + combinedResults[mid]) / 2 : combinedResults[mid];
+	return {
+		id: results1.id,
+		results: combinedResults,
+		min: Math.min(results1.min, results2.min),
+		max: Math.max(results1.max, results2.max),
+		mean: combinedMean,
+		median: newMedian,
+		runData: {
+			// TODO should re-compute the bashin gain from .t/.p and pick whichever is closer to new mean/median
+			...(n2 > n1 ? results2.runData : results1.runData),
+			minrun: results1.min < results2.min ? results1.runData.minrun : results2.runData.minrun,
+			maxrun: results1.max > results2.max ? results1.runData.maxrun : results2.runData.maxrun,
+		}
+	};
+}
+
+function mergeResultSets(data1, data2) {
+	data2.forEach((r,id) => {
+		data1.set(id, mergeResults(data1.get(id), r));
+	});
+}
+
+function run1Round(nsamples: number, skills: string[], course: CourseData, racedef: RaceParameters, uma, options) {
+	const data = new Map();
+	skills.forEach(id => {
+		const withSkill = uma.set('skills', uma.skills.add(id));
+		const {results, runData} = runComparison(nsamples, course, racedef, uma, withSkill, options);
+		const mid = Math.floor(results.length / 2);
+		const median = results.length % 2 == 0 ? (results[mid-1] + results[mid]) / 2 : results[mid];
+		const mean = results.reduce((a,b) => a+b, 0) / results.length;
+		data.set(id, {
+			id, results, runData,
+			min: results[0],
+			max: results[results.length-1],
+			mean,
+			median
+		});
+	});
+	return data;
+}
+
+self.addEventListener('message', function (e) {
+	const {skills, course, racedef, uma, options} = e.data;
+	const uma_ = new HorseState(uma).set('skills', SkillSet(uma.skills));
+	let results = run1Round(10, skills, course, racedef, uma_, options);
+	postMessage(results);
+	let update = run1Round(50, skills.filter(id => results.get(id).max > 0.1), course, racedef, uma_, options);
+	mergeResultSets(results, update);
+	postMessage(results);
+	update = run1Round(200, skills.filter(id => Math.abs(results.get(id).max - results.get(id).min) > 0.1), course, racedef, uma_, options);
+	mergeResultSets(results, update);
+	postMessage(results);
+});

@@ -11,7 +11,8 @@ import type { GameHpPolicy } from '../uma-skill-tools/HpPolicy';
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
 import { SkillList, Skill, STRINGS_en as SKILL_STRINGS_en } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
-import { HorseState, SkillSet, HorseDef, horseDefTabs } from '../components/HorseDef';
+import { HorseState, SkillSet } from '../components/HorseDefTypes';
+import { HorseDef, horseDefTabs } from '../components/HorseDef';
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 
 import { runComparison } from './compare';
@@ -394,7 +395,15 @@ function App(props) {
 	const setResults = setSimState;
 	const setChartData = setSimState;
 
-	const [tableRows, setTableRows] = useState([]);
+	const [tableData, updateTableData] = useReducer((data,newData) => {
+		const merged = new Map();
+		if (newData == 'reset') {
+			return merged;
+		}
+		data.forEach((v,k) => merged.set(k,v));
+		newData.forEach((v,k) => merged.set(k,v));
+		return merged;
+	}, new Map());
 
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
@@ -407,6 +416,14 @@ function App(props) {
 
 	const [{mode, currentIdx, expanded}, updateUiState] = useReducer(nextUiState, DEFAULT_UI_STATE);
 	function toggleExpand(e: Event) { e.stopPropagation(); updateUiState(UiStateMsg.ToggleExpand); }
+
+	const [worker1, worker2] = [1,2].map(_ => useMemo(() => {
+		const w = new Worker('./chartrunner.worker.js');
+		w.addEventListener('message', function (e) {
+			updateTableData(e.data);
+		});
+		return w;
+	}, []));
 
 	function loadState() {
 		if (window.location.hash) {
@@ -455,7 +472,12 @@ function App(props) {
 		postEvent('doBasinnChart', {});
 		const params = racedefToParams(racedef, uma1.strategy);
 		const skills = getActivateableSkills(baseSkillsToTest.filter(s => !uma1.skills.has(s) && (s[0] != '9' || !uma1.skills.has('1' + s.slice(1)))), uma1, course, params);
-		setTableRows(runBasinnChart(skills, 10, course, params, uma1, {usePosKeep}));
+		const uma = uma1.toJS();
+		const skills1 = skills.slice(0,Math.floor(skills.length/2));
+		const skills2 = skills.slice(Math.floor(skills.length/2));
+		updateTableData('reset');
+		worker1.postMessage({skills: skills1, course, racedef: params, uma, options: {usePosKeep}});
+		worker2.postMessage({skills: skills2, course, racedef: params, uma, options: {usePosKeep}});
 	}
 
 	function rtMouseMove(pos) {
@@ -610,10 +632,10 @@ function App(props) {
 						</div>
 					</div>
 				}
-				{mode == Mode.Chart && tableRows.length > 0 &&
+				{mode == Mode.Chart && tableData.size > 0 &&
 					<div id="resultsPaneWrapper">
 						<div id="resultsPane" class="mode-chart">
-							<BasinnChart data={tableRows} />
+							<BasinnChart data={tableData.values().toArray()} />
 						</div>
 					</div>
 				}

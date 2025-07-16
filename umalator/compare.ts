@@ -3,7 +3,7 @@ import { RaceParameters } from '../uma-skill-tools/RaceParameters';
 import { RaceSolver } from '../uma-skill-tools/RaceSolver';
 import { RaceSolverBuilder } from '../uma-skill-tools/RaceSolverBuilder';
 
-import { HorseState } from '../components/HorseDef';
+import { HorseState } from '../components/HorseDefTypes';
 
 export function runComparison(nsamples: number, course: CourseData, racedef: RaceParameters, uma1: HorseState, uma2: HorseState, options) {
 	const standard = new RaceSolverBuilder(nsamples)

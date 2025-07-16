@@ -52,10 +52,10 @@ const redirectTable = {
 };
 
 await esbuild.build({
-	entryPoints: ['../umalator/app.tsx'],
+	entryPoints: [{in: '../umalator/app.tsx', out: 'bundle'}, '../umalator/chartrunner.worker.ts'],
 	bundle: true,
 	minify: !debug,
-	outfile: 'bundle.js',
+	outdir: '.',
 	define: {CC_DEBUG: debug.toString(), CC_GLOBAL: 'true'},
 	external: ['*.ttf'],
 	plugins: [redirectData, mockAssert, redirectTable]

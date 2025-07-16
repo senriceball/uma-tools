@@ -42,25 +42,11 @@ export function getActivateableSkills(skills: string[], horse: HorseState, cours
 	});
 }
 
-export function runBasinnChart(skills: string[], nsamples: number, course: CourseData, racedef: RaceParameters, uma: HorseState, options) {
-	return skills.map(id => {
-		const withSkill = uma.set('skills', uma.skills.add(id));
-		const {results, runData} = runComparison(nsamples, course, racedef, uma, withSkill, options);
-		const mid = Math.floor(results.length / 2);
-		const median = results.length % 2 == 0 ? (results[mid-1] + results[mid]) / 2 : results[mid];
-		const mean = results.reduce((a,b) => a+b, 0) / results.length;
-		return {
-			id, results, runData,
-			min: results[0],
-			max: results[results.length-1],
-			mean,
-			median
-		};
-	});
+function runBasinnChart(skills: string[], nsamples: number, course: CourseData, racedef: RaceParameters, uma: HorseState, options) {
 }
 
 function formatBasinn(info) {
-	return info.getValue().toFixed(2) + ' L';
+	return info.getValue().toFixed(2).replace('-0.00', '0.00') + ' L';
 }
 
 function SkillNameCell(props) {
