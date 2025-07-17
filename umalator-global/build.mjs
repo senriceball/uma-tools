@@ -52,7 +52,7 @@ const redirectTable = {
 };
 
 await esbuild.build({
-	entryPoints: [{in: '../umalator/app.tsx', out: 'bundle'}, '../umalator/chartrunner.worker.ts'],
+	entryPoints: [{in: '../umalator/app.tsx', out: 'bundle'}, '../umalator/simulator.worker.ts'],
 	bundle: true,
 	minify: !debug,
 	outdir: '.',

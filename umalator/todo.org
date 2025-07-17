@@ -24,7 +24,7 @@ possibly presented as another "tab" underneath the chart (tabbed with min/max/me
 ** TODO eventually, stamina calculator mode
 * TODO unique skill levels
 also implement unique scaling in sim
-* TODO run compare simulator in worker
+* DONE run compare simulator in worker
 should probably not be run on the main UI thread
 * TODO cleanup
 ** TODO build system

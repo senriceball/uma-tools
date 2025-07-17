@@ -444,9 +444,17 @@ function App(props) {
 	function toggleExpand(e: Event) { e.stopPropagation(); updateUiState(UiStateMsg.ToggleExpand); }
 
 	const [worker1, worker2] = [1,2].map(_ => useMemo(() => {
-		const w = new Worker('./chartrunner.worker.js');
+		const w = new Worker('./simulator.worker.js');
 		w.addEventListener('message', function (e) {
-			updateTableData(e.data);
+			const {type, results} = e.data;
+			switch (type) {
+				case 'compare':
+					setResults(results);
+					break;
+				case 'chart':
+					updateTableData(e.data);
+					break;
+			}
 		});
 		return w;
 	}, []));
@@ -491,7 +499,17 @@ function App(props) {
 
 	function doComparison() {
 		postEvent('doComparison', {});
-		setResults(runComparison(nsamples, course, racedefToParams(racedef), uma1, uma2, {usePosKeep}));
+		worker1.postMessage({
+			msg: 'compare',
+			data: {
+				nsamples,
+				course,
+				racedef: racedefToParams(racedef),
+				uma1: uma1.toJS(),
+				uma2: uma2.toJS(),
+				options: {usePosKeep}
+			}
+		});
 	}
 
 	function doBasinnChart() {
@@ -505,8 +523,8 @@ function App(props) {
 		const skills2 = skills.slice(Math.floor(skills.length/2));
 		updateTableData('reset');
 		updateTableData(filler);
-		worker1.postMessage({skills: skills1, course, racedef: params, uma, options: {usePosKeep}});
-		worker2.postMessage({skills: skills2, course, racedef: params, uma, options: {usePosKeep}});
+		worker1.postMessage({msg: 'chart', data: {skills: skills1, course, racedef: params, uma, options: {usePosKeep}}});
+		worker2.postMessage({msg: 'chart', data: {skills: skills2, course, racedef: params, uma, options: {usePosKeep}}});
 	}
 
 	function basinnChartSelection(skillId) {
@@ -515,10 +533,12 @@ function App(props) {
 	}
 
 	function addSkillFromTable(skillId) {
+		postEvent('addSkillFromTable', {skillId});
 		setUma1(uma1.set('skills', uma1.skills.add(skillId)));
 	}
 
 	function showPopover(skillId) {
+		postEvent('showPopover', {skillId});
 		setPopoverSkill(skillId);
 	}
 

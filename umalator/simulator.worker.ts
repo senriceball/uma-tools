@@ -52,20 +52,43 @@ function run1Round(nsamples: number, skills: string[], course: CourseData, raced
 	return data;
 }
 
-self.addEventListener('message', function (e) {
-	let {skills, course, racedef, uma, options} = e.data;
+function runChart({skills, course, racedef, uma, options}) {
 	const uma_ = new HorseState(uma).set('skills', SkillSet(uma.skills));
 	let results = run1Round(5, skills, course, racedef, uma_, options);
-	postMessage(results);
+	postMessage({type: 'chart', results});
 	skills = skills.filter(id => results.get(id).max > 0.1);
 	let update = run1Round(20, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
-	postMessage(results);
+	postMessage({type: 'chart', results});
 	skills = skills.filter(id => Math.abs(results.get(id).max - results.get(id).min) > 0.1);
 	update = run1Round(50, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
-	postMessage(results);
+	postMessage({type: 'chart', results});
 	update = run1Round(200, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
-	postMessage(results);
+	postMessage({type: 'chart', results});
+}
+
+function runCompare({nsamples, course, racedef, uma1, uma2, options}) {
+	const uma1_ = new HorseState(uma1).set('skills', SkillSet(uma1.skills));
+	const uma2_ = new HorseState(uma2).set('skills', SkillSet(uma2.skills));
+	let results;
+	for (let n = Math.min(20, nsamples), mul = 6; n < nsamples; n = Math.min(n * mul, nsamples), mul = Math.max(mul - 1, 2)) {
+		results = runComparison(n, course, racedef, uma1_, uma2_, options);
+		postMessage({type: 'compare', results});
+	}
+	results = runComparison(nsamples, course, racedef, uma1_, uma2_, options);
+	postMessage({type: 'compare', results});
+}
+
+self.addEventListener('message', function (e) {
+	const {msg, data} = e.data;
+	switch (msg) {
+		case 'chart':
+			runChart(data);
+			break;
+		case 'compare':
+			runCompare(data);
+			break;
+	}
 });
