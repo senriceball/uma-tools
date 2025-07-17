@@ -452,7 +452,7 @@ function App(props) {
 					setResults(results);
 					break;
 				case 'chart':
-					updateTableData(e.data);
+					updateTableData(results);
 					break;
 			}
 		});
