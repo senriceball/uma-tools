@@ -78,5 +78,6 @@
 }
 
 .chartSkillName > img {
+	cursor: pointer;
 	height: 1.5em;
 }

@@ -10,7 +10,7 @@
     "esbuild": "^0.19.5"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.5.3",
+    "@floating-ui/dom": "^1.7.2",
     "d3": "^7.9.0",
     "immutable": "^5.0.3",
     "immutable-sorted": "^0.2.11",

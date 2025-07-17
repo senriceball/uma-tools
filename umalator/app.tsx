@@ -3,13 +3,14 @@ import { useState, useReducer, useMemo, useEffect, useRef, useId, useCallback } 
 import { Text, IntlProvider } from 'preact-i18n';
 import { Record, Set as ImmSet } from 'immutable';
 import * as d3 from 'd3';
+import { computePosition, flip } from '@floating-ui/dom';
 
 import { CourseHelpers } from '../uma-skill-tools/CourseData';
 import { RaceParameters, Mood, GroundCondition, Weather, Season, Time, Grade } from '../uma-skill-tools/RaceParameters';
 import type { GameHpPolicy } from '../uma-skill-tools/HpPolicy';
 
 import { Language, LanguageSelect, useLanguageSelect } from '../components/Language';
-import { SkillList, Skill, STRINGS_en as SKILL_STRINGS_en } from '../components/SkillList';
+import { ExpandedSkillDetails, STRINGS_en as SKILL_STRINGS_en } from '../components/SkillList';
 import { RaceTrack, TrackSelect, RegionDisplayType } from '../components/RaceTrack';
 import { HorseState, SkillSet } from '../components/HorseDefTypes';
 import { HorseDef, horseDefTabs } from '../components/HorseDef';
@@ -150,6 +151,29 @@ function Histogram(props) {
 			<g>{rects}</g>
 			<g ref={axes}></g>
 		</svg>
+	);
+}
+
+function BasinnChartPopover(props) {
+	const popover = useRef(null);
+	useEffect(function () {
+		if (popover.current == null) return;
+		// bit nasty
+		const anchor = document.querySelector(`.basinnChart tr[data-skillid="${props.skillid}"] img`);
+		computePosition(anchor, popover.current, {
+			placement: 'bottom-start',
+			middleware: [flip()]
+		}).then(({x,y}) => {
+			popover.current.style.transform = `translate(${x}px,${y}px)`;
+			popover.current.style.visibility = 'visible';
+		});
+		popover.current.focus();
+	}, [popover.current, props.skillid]);
+	return (
+		<div class="basinnChartPopover" tabindex="1000" style="visibility:hidden" ref={popover}>
+			<ExpandedSkillDetails id={props.skillid} distanceFactor={props.courseDistance} dismissable={false} />
+			<Histogram width={500} height={333} data={props.results} />
+		</div>
 	);
 }
 
@@ -395,17 +419,17 @@ function App(props) {
 	const setResults = setSimState;
 	const setChartData = setSimState;
 
-	const [{tableData, tableHiddenRows}, updateTableData] = useReducer((state,newData) => {
+	const [tableData, updateTableData] = useReducer((data,newData) => {
 		const merged = new Map();
 		if (newData == 'reset') {
-			return {tableData: merged, tableHiddenRows: ImmSet()};
-		} else if (typeof newData == 'string') {
-			return {...state, tableHiddenRows: state.tableHiddenRows.add(newData)};
+			return merged;
 		}
-		state.tableData.forEach((v,k) => merged.set(k,v));
+		data.forEach((v,k) => merged.set(k,v));
 		newData.forEach((v,k) => merged.set(k,v));
-		return {...state, tableData: merged};
-	}, {tableData: new Map(), tableHiddenRows: ImmSet()});
+		return merged;
+	}, new Map());
+
+	const [popoverSkill, setPopoverSkill] = useState('');
 
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
@@ -487,9 +511,18 @@ function App(props) {
 	}
 
 	function addSkillFromTable(skillId) {
-		updateTableData(skillId);
 		setUma1(uma1.set('skills', uma1.skills.add(skillId)));
 	}
+
+	function showPopover(skillId) {
+		setPopoverSkill(skillId);
+	}
+
+	useEffect(function () {
+		document.body.addEventListener('click', function () {
+			setPopoverSkill('');
+		});
+	}, []);
 
 	function rtMouseMove(pos) {
 		if (chartData == null) return;
@@ -646,7 +679,7 @@ function App(props) {
 				{mode == Mode.Chart && tableData.size > 0 &&
 					<div id="resultsPaneWrapper">
 						<div id="resultsPane" class="mode-chart">
-							<BasinnChart data={tableData.values().toArray()} hidden={tableHiddenRows} onSelectionChange={basinnChartSelection} onRunTypeChange={setChartData} onDblClickRow={addSkillFromTable} />
+							<BasinnChart data={tableData.values().toArray()} hidden={uma1.skills} onSelectionChange={basinnChartSelection} onRunTypeChange={setChartData} onDblClickRow={addSkillFromTable} onInfoClick={showPopover} />
 						</div>
 					</div>
 				}
@@ -669,6 +702,7 @@ function App(props) {
 					</div>}
 					{expanded && <div id="closeUmaOverlay" title="Close panel" onClick={toggleExpand}>✕</div>}
 				</div>
+				{popoverSkill && <BasinnChartPopover skillid={popoverSkill} results={tableData.get(popoverSkill).results} courseDistance={course.distance} />}
 			</IntlProvider>
 		</Language.Provider>
 	);

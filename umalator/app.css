@@ -328,3 +328,20 @@ body {
 	right: 15px;
 	transform: rotate(-135deg) translate(-15px,0);
 }
+
+.basinnChartPopover {
+	background: white;
+	border: 2px solid rgb(181, 174, 187);
+	border-radius: 6px;
+	display: flex;
+	height: 333px;
+	left: 0;
+	padding: 10px;
+	position: absolute;
+	top: 0;
+	width: 845px;
+}
+
+.basinnChartPopover .expandedSkill {
+	width: 345px;
+}

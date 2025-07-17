@@ -125,8 +125,12 @@ export function BasinnChart(props) {
 		if (tr == null) return;
 		e.stopPropagation();
 		const id = tr.dataset.skillid;
-		setSelected(id);
-		props.onSelectionChange(id);
+		if (e.target.tagName == 'IMG') {
+			props.onInfoClick(id);
+		} else {
+			setSelected(id);
+			props.onSelectionChange(id);
+		}
 	}
 
 	function handleDblClick(e) {
