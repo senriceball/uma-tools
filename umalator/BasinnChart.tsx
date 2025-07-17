@@ -43,7 +43,8 @@ export function getActivateableSkills(skills: string[], horse: HorseState, cours
 	});
 }
 
-function runBasinnChart(skills: string[], nsamples: number, course: CourseData, racedef: RaceParameters, uma: HorseState, options) {
+export function getNullRow(skillid: string) {
+	return {id: skillid, min: 0, max: 0, mean: 0, median: 0, results: [], runData: null};
 }
 
 function formatBasinn(info) {

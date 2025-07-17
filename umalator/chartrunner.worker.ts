@@ -53,14 +53,19 @@ function run1Round(nsamples: number, skills: string[], course: CourseData, raced
 }
 
 self.addEventListener('message', function (e) {
-	const {skills, course, racedef, uma, options} = e.data;
+	let {skills, course, racedef, uma, options} = e.data;
 	const uma_ = new HorseState(uma).set('skills', SkillSet(uma.skills));
-	let results = run1Round(10, skills, course, racedef, uma_, options);
+	let results = run1Round(5, skills, course, racedef, uma_, options);
 	postMessage(results);
-	let update = run1Round(50, skills.filter(id => results.get(id).max > 0.1), course, racedef, uma_, options);
+	skills = skills.filter(id => results.get(id).max > 0.1);
+	let update = run1Round(20, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
 	postMessage(results);
-	update = run1Round(200, skills.filter(id => Math.abs(results.get(id).max - results.get(id).min) > 0.1), course, racedef, uma_, options);
+	skills = skills.filter(id => Math.abs(results.get(id).max - results.get(id).min) > 0.1);
+	update = run1Round(50, skills, course, racedef, uma_, options);
+	mergeResultSets(results, update);
+	postMessage(results);
+	update = run1Round(200, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
 	postMessage(results);
 });

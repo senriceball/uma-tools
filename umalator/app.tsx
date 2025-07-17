@@ -17,7 +17,7 @@ import { HorseDef, horseDefTabs } from '../components/HorseDef';
 import { TRACKNAMES_ja, TRACKNAMES_en } from '../strings/common';
 
 import { runComparison } from './compare';
-import { getActivateableSkills, runBasinnChart, BasinnChart } from './BasinnChart';
+import { getActivateableSkills, getNullRow, runBasinnChart, BasinnChart } from './BasinnChart';
 
 import { initTelemetry, postEvent } from './telemetry';
 
@@ -498,16 +498,20 @@ function App(props) {
 		postEvent('doBasinnChart', {});
 		const params = racedefToParams(racedef, uma1.strategy);
 		const skills = getActivateableSkills(baseSkillsToTest.filter(s => !uma1.skills.has(s) && (s[0] != '9' || !uma1.skills.has('1' + s.slice(1)))), uma1, course, params);
+		const filler = new Map();
+		skills.forEach(id => filler.set(id, getNullRow(id)));
 		const uma = uma1.toJS();
 		const skills1 = skills.slice(0,Math.floor(skills.length/2));
 		const skills2 = skills.slice(Math.floor(skills.length/2));
 		updateTableData('reset');
+		updateTableData(filler);
 		worker1.postMessage({skills: skills1, course, racedef: params, uma, options: {usePosKeep}});
 		worker2.postMessage({skills: skills2, course, racedef: params, uma, options: {usePosKeep}});
 	}
 
 	function basinnChartSelection(skillId) {
-		setResults(tableData.get(skillId));
+		const r = tableData.get(skillId);
+		if (r.runData != null) setResults(r);
 	}
 
 	function addSkillFromTable(skillId) {
