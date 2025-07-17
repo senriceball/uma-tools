@@ -129,6 +129,14 @@ export function BasinnChart(props) {
 		props.onSelectionChange(id);
 	}
 
+	function handleDblClick(e) {
+		const tr = e.target.closest('tr');
+		if (tr == null) return;
+		e.stopPropagation();
+		const id = tr.dataset.skillid;
+		props.onDblClickRow(id);
+	}
+
 	return (
 		<div class="basinnChartWrapper">
 			<table class="basinnChart">
@@ -158,14 +166,17 @@ export function BasinnChart(props) {
 						</tr>
 					))}
 				</thead>
-				<tbody onClick={handleClick}>
-					{table.getRowModel().rows.map(row => (
-						<tr key={row.id} data-skillid={row.getValue('id')} class={row.getValue('id') == selected && 'selected'}>
-							{row.getAllCells().map(cell => (
-								<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-							))}
-						</tr>
-					))}
+				<tbody onClick={handleClick} onDblClick={handleDblClick}>
+					{table.getRowModel().rows.map(row => {
+						const id = row.getValue('id');
+						return (
+							<tr key={row.id} data-skillid={id} class={id == selected && 'selected'} style={props.hidden.has(id) && 'display:none'}>
+								{row.getAllCells().map(cell => (
+									<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+								))}
+							</tr>
+						);
+					})}
 				</tbody>
 			</table>
 		</div>

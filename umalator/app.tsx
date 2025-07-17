@@ -1,7 +1,7 @@
 import { h, Fragment, render } from 'preact';
 import { useState, useReducer, useMemo, useEffect, useRef, useId, useCallback } from 'preact/hooks';
 import { Text, IntlProvider } from 'preact-i18n';
-import { Record } from 'immutable';
+import { Record, Set as ImmSet } from 'immutable';
 import * as d3 from 'd3';
 
 import { CourseHelpers } from '../uma-skill-tools/CourseData';
@@ -395,15 +395,17 @@ function App(props) {
 	const setResults = setSimState;
 	const setChartData = setSimState;
 
-	const [tableData, updateTableData] = useReducer((data,newData) => {
+	const [{tableData, tableHiddenRows}, updateTableData] = useReducer((state,newData) => {
 		const merged = new Map();
 		if (newData == 'reset') {
-			return merged;
+			return {tableData: merged, tableHiddenRows: ImmSet()};
+		} else if (typeof newData == 'string') {
+			return {...state, tableHiddenRows: state.tableHiddenRows.add(newData)};
 		}
-		data.forEach((v,k) => merged.set(k,v));
+		state.tableData.forEach((v,k) => merged.set(k,v));
 		newData.forEach((v,k) => merged.set(k,v));
-		return merged;
-	}, new Map());
+		return {...state, tableData: merged};
+	}, {tableData: new Map(), tableHiddenRows: ImmSet()});
 
 	function racesetter(prop) {
 		return (value) => setRaceDef(racedef.set(prop, value));
@@ -480,8 +482,13 @@ function App(props) {
 		worker2.postMessage({skills: skills2, course, racedef: params, uma, options: {usePosKeep}});
 	}
 
-	function basinnChartSelection(skillId, runType) {
+	function basinnChartSelection(skillId) {
 		setResults(tableData.get(skillId));
+	}
+
+	function addSkillFromTable(skillId) {
+		updateTableData(skillId);
+		setUma1(uma1.set('skills', uma1.skills.add(skillId)));
 	}
 
 	function rtMouseMove(pos) {
@@ -639,7 +646,7 @@ function App(props) {
 				{mode == Mode.Chart && tableData.size > 0 &&
 					<div id="resultsPaneWrapper">
 						<div id="resultsPane" class="mode-chart">
-							<BasinnChart data={tableData.values().toArray()} onSelectionChange={basinnChartSelection} onRunTypeChange={setChartData} />
+							<BasinnChart data={tableData.values().toArray()} hidden={tableHiddenRows} onSelectionChange={basinnChartSelection} onRunTypeChange={setChartData} onDblClickRow={addSkillFromTable} />
 						</div>
 					</div>
 				}
