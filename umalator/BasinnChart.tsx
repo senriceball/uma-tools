@@ -18,6 +18,7 @@ import { runComparison } from './compare';
 
 import './BasinnChart.css';
 
+import skillnames from '../uma-skill-tools/data/skillnames.json';
 import skill_meta from '../skill_meta.json';
 
 function skillmeta(id: string) {
@@ -63,6 +64,7 @@ export function BasinnChart(props) {
 		header: () => <span>Skill name</span>,
 		accessorKey: 'id',
 		cell: (info) => <SkillNameCell id={info.getValue()} />,
+		sortingFn: (a,b,_) => skillnames[a] < skillnames[b] ? -1 : 1
 	}, {
 		header: () => <span>Minimum</span>,
 		accessorKey: 'min',
@@ -70,18 +72,21 @@ export function BasinnChart(props) {
 	}, {
 		header: () => <span>Maximum</span>,
 		accessorKey: 'max',
-		cell: formatBasinn
+		cell: formatBasinn,
+		sortDescFirst: true
 	}, {
 		header: () => <span>Mean</span>,
 		accessorKey: 'mean',
-		cell: formatBasinn
+		cell: formatBasinn,
+		sortDescFirst: true
 	}, {
 		header: () => <span>Median</span>,
 		accessorKey: 'median',
-		cell: formatBasinn
+		cell: formatBasinn,
+		sortDescFirst: true
 	}], []);
 
-	const [sorting, setSorting] = useState<SortingState>([]);
+	const [sorting, setSorting] = useState<SortingState>([{id: 'mean', desc: true}]);
 
 	const table = useTable({
 		_features: tableFeatures({rowSortingFeature}),
@@ -89,8 +94,29 @@ export function BasinnChart(props) {
 		columns,
 		data: props.data,
 		onSortingChange: setSorting,
+		enableSortingRemoval: false,
 		state: {sorting}
 	});
+
+	const [selected, setSelected] = useState('');
+	const [selectedType, setSelectedType] = useState('mean');
+
+	function handleClick(e) {
+		const td = e.target.closest('td');
+		if (td == null) return;
+		e.stopPropagation();
+		let prevCount = 0;
+		let el = td;
+		while (el.previousElementSibling) {
+			prevCount += 1;
+			el = el.previousElementSibling;
+		}
+		const id = td.parentNode.dataset.skillid;
+		setSelected(id);
+		const runType = [selectedType, 'min', 'max', 'mean', 'median'][prevCount];
+		setSelectedType(runType);
+		props.onSelectionChange(id, runType + 'run');
+	}
 
 	return (
 		<div class="basinnChartWrapper">
@@ -122,11 +148,13 @@ export function BasinnChart(props) {
 						</tr>
 					))}
 				</thead>
-				<tbody>
+				<tbody onClick={handleClick}>
 					{table.getRowModel().rows.map(row => (
-						<tr key={row.id}>
+						<tr key={row.id} data-skillid={row.getValue('id')} class={row.getValue('id') == selected && 'selected'}>
 							{row.getAllCells().map(cell => (
-								<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+								<td key={cell.id} class={cell.column.id == selectedType && 'selected'}>
+									{flexRender(cell.column.columnDef.cell, cell.getContext())}
+								</td>
 							))}
 						</tr>
 					))}

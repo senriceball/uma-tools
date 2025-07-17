@@ -63,8 +63,17 @@
 	transform: rotate(45deg);
 }
 
+.basinnChart tr.selected {
+	background: rgb(121, 216, 35);
+}
+
 .basinnChart td {
 	padding-left: 4px;
+}
+
+.basinnChart tr.selected > td.selected {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
 }
 
 .chartSkillName {

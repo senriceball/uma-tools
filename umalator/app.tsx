@@ -480,6 +480,11 @@ function App(props) {
 		worker2.postMessage({skills: skills2, course, racedef: params, uma, options: {usePosKeep}});
 	}
 
+	function basinnChartSelection(skillId, runType) {
+		setResults(tableData.get(skillId));
+		setChartData(runType);
+	}
+
 	function rtMouseMove(pos) {
 		if (chartData == null) return;
 		document.getElementById('rtMouseOverBox').style.display = 'block';
@@ -635,7 +640,7 @@ function App(props) {
 				{mode == Mode.Chart && tableData.size > 0 &&
 					<div id="resultsPaneWrapper">
 						<div id="resultsPane" class="mode-chart">
-							<BasinnChart data={tableData.values().toArray()} />
+							<BasinnChart data={tableData.values().toArray()} onSelectionChange={basinnChartSelection} />
 						</div>
 					</div>
 				}
