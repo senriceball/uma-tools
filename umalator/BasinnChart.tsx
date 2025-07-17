@@ -1,5 +1,5 @@
 import { h, Fragment } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useId } from 'preact/hooks';
 import { Text, Localizer } from 'preact-i18n';
 
 import {
@@ -59,32 +59,54 @@ function SkillNameCell(props) {
 	);
 }
 
+function headerRenderer(radioGroup, selectedType, type, text, onClick) {
+	function click(e) {
+		e.stopPropagation();
+		onClick(type);
+	}
+	return (c) => (
+		<div>
+			<input type="radio" name={radioGroup} checked={selectedType == type} title={`Show ${text.toLowerCase()} on chart`} onClick={click} />
+			<span onClick={c.header.column.getToggleSortingHandler()}>{text}</span>
+		</div>
+	);
+}
+
 export function BasinnChart(props) {
+	const radioGroup = useId();
+	const [selected, setSelected] = useState('');
+	const [selectedType, setSelectedType] = useState('mean');
+
+	function headerClick(type) {
+		setSelectedType(type);
+		props.onRunTypeChange(type + 'run');
+	}
+
 	const columns = useMemo(() => [{
 		header: () => <span>Skill name</span>,
 		accessorKey: 'id',
 		cell: (info) => <SkillNameCell id={info.getValue()} />,
 		sortingFn: (a,b,_) => skillnames[a] < skillnames[b] ? -1 : 1
 	}, {
-		header: () => <span>Minimum</span>,
+		header: headerRenderer(radioGroup, selectedType, 'min', 'Minimum', headerClick),
 		accessorKey: 'min',
 		cell: formatBasinn
 	}, {
-		header: () => <span>Maximum</span>,
+		header: headerRenderer(radioGroup, selectedType, 'max', 'Maximum', headerClick),
 		accessorKey: 'max',
 		cell: formatBasinn,
 		sortDescFirst: true
 	}, {
-		header: () => <span>Mean</span>,
+		header: headerRenderer(radioGroup, selectedType, 'mean', 'Mean', headerClick),
 		accessorKey: 'mean',
 		cell: formatBasinn,
 		sortDescFirst: true
 	}, {
-		header: () => <span>Median</span>,
+		header: headerRenderer(radioGroup, selectedType, 'median', 'Median', headerClick),
 		accessorKey: 'median',
 		cell: formatBasinn,
 		sortDescFirst: true
-	}], []);
+	}], [selectedType]);
 
 	const [sorting, setSorting] = useState<SortingState>([{id: 'mean', desc: true}]);
 
@@ -98,24 +120,13 @@ export function BasinnChart(props) {
 		state: {sorting}
 	});
 
-	const [selected, setSelected] = useState('');
-	const [selectedType, setSelectedType] = useState('mean');
-
 	function handleClick(e) {
-		const td = e.target.closest('td');
-		if (td == null) return;
+		const tr = e.target.closest('tr');
+		if (tr == null) return;
 		e.stopPropagation();
-		let prevCount = 0;
-		let el = td;
-		while (el.previousElementSibling) {
-			prevCount += 1;
-			el = el.previousElementSibling;
-		}
-		const id = td.parentNode.dataset.skillid;
+		const id = tr.dataset.skillid;
 		setSelected(id);
-		const runType = [selectedType, 'min', 'max', 'mean', 'median'][prevCount];
-		setSelectedType(runType);
-		props.onSelectionChange(id, runType + 'run');
+		props.onSelectionChange(id);
 	}
 
 	return (
@@ -138,8 +149,7 @@ export function BasinnChart(props) {
 													'asc': 'Sort ascending',
 													'desc': 'Sort descending',
 													'false': 'Clear sort'
-												})[header.column.getNextSortingOrder()]}
-											onClick={header.column.getToggleSortingHandler()}>
+												})[header.column.getNextSortingOrder()]}>
 											{flexRender(header.column.columnDef.header, header.getContext())}
 										</div>
 									)}
@@ -152,9 +162,7 @@ export function BasinnChart(props) {
 					{table.getRowModel().rows.map(row => (
 						<tr key={row.id} data-skillid={row.getValue('id')} class={row.getValue('id') == selected && 'selected'}>
 							{row.getAllCells().map(cell => (
-								<td key={cell.id} class={cell.column.id == selectedType && 'selected'}>
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</td>
+								<td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
 							))}
 						</tr>
 					))}

@@ -34,16 +34,16 @@
 
 .basinnChart .columnHeader {
 	border-bottom: 2px solid rgb(181, 174, 187);
-	margin-left: -2px;
+	margin-left: -18px;
 	padding-right: 30px;
 	width: 100%;
 }
 
-.basinnChart .columnHeader > span {
+.basinnChart .columnHeader span {
 	position: relative;
 }
 
-.basinnChartSortedAsc > span::after, .basinnChartSortedDesc > span::after {
+.basinnChartSortedAsc span::after, .basinnChartSortedDesc span::after {
 	border-bottom: 2px solid #794016;
 	border-right: 2px solid #794016;
 	content: "";
@@ -55,11 +55,11 @@
 	width: 4px;
 }
 
-.basinnChartSortedAsc > span::after {
+.basinnChartSortedAsc span::after {
 	transform: rotate(-135deg);
 }
 
-.basinnChartSortedDesc > span::after {
+.basinnChartSortedDesc span::after {
 	transform: rotate(45deg);
 }
 
@@ -69,11 +69,6 @@
 
 .basinnChart td {
 	padding-left: 4px;
-}
-
-.basinnChart tr.selected > td.selected {
-	text-decoration: underline;
-	text-decoration-thickness: 2px;
 }
 
 .chartSkillName {

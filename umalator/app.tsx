@@ -482,7 +482,6 @@ function App(props) {
 
 	function basinnChartSelection(skillId, runType) {
 		setResults(tableData.get(skillId));
-		setChartData(runType);
 	}
 
 	function rtMouseMove(pos) {
@@ -640,7 +639,7 @@ function App(props) {
 				{mode == Mode.Chart && tableData.size > 0 &&
 					<div id="resultsPaneWrapper">
 						<div id="resultsPane" class="mode-chart">
-							<BasinnChart data={tableData.values().toArray()} onSelectionChange={basinnChartSelection} />
+							<BasinnChart data={tableData.values().toArray()} onSelectionChange={basinnChartSelection} onRunTypeChange={setChartData} />
 						</div>
 					</div>
 				}
