@@ -333,7 +333,7 @@ function updateResultsState(state: typeof EMPTY_RESULTS_STATE, o: number | strin
 			courseId: state.courseId,
 			results: state.results,
 			runData: state.runData,
-			chartData: state.runData[o],
+			chartData: state.runData != null ? state.runData[o] : null,
 			displaying: o
 		};
 	} else {
