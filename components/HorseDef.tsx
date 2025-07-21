@@ -180,8 +180,8 @@ export function StrategySelect(props) {
 			<select class="horseStrategySelect" value={props.s} tabindex={props.tabindex} onInput={(e) => props.setS(e.currentTarget.value)}>
 				<option value="Nige">Front Runner</option>
 				<option value="Senkou">Pace Chaser</option>
-				<option value="Sasi">Late Closer</option>
-				<option value="Oikomi">Tail End</option>
+				<option value="Sasi">Late Surger</option>
+				<option value="Oikomi">End Closer</option>
 			</select>
 		);
 	}
