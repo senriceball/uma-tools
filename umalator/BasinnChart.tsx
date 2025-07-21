@@ -11,7 +11,7 @@ import { Region, RegionList } from '../uma-skill-tools/Region';
 import { CourseData } from '../uma-skill-tools/CourseData';
 import { RaceParameters } from '../uma-skill-tools/RaceParameters';
 import { getParser } from '../uma-skill-tools/ConditionParser';
-import { buildBaseStats, buildSkillData } from '../uma-skill-tools/RaceSolverBuilder';
+import { buildBaseStats, buildSkillData, Perspective } from '../uma-skill-tools/RaceSolverBuilder';
 
 import type { HorseState } from '../components/HorseDef';
 import { runComparison } from './compare';
@@ -34,11 +34,10 @@ export function getActivateableSkills(skills: string[], horse: HorseState, cours
 	return skills.filter(id => {
 		let sd;
 		try {
-			sd = buildSkillData(h2, racedef, course, wholeCourse, parser, id);
+			sd = buildSkillData(h2, racedef, course, wholeCourse, parser, id, Perspective.Any);
 		} catch (_) {
 			return false;
 		}
-		if (sd == null) return false;
 		return sd.some(trigger => trigger.regions.length > 0 && trigger.regions[0].start < 9999);
 	});
 }

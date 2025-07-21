@@ -1,7 +1,7 @@
 import { CourseData } from '../uma-skill-tools/CourseData';
 import { RaceParameters } from '../uma-skill-tools/RaceParameters';
 import { RaceSolver } from '../uma-skill-tools/RaceSolver';
-import { RaceSolverBuilder } from '../uma-skill-tools/RaceSolverBuilder';
+import { RaceSolverBuilder, Perspective } from '../uma-skill-tools/RaceSolverBuilder';
 
 import { HorseState } from '../components/HorseDefTypes';
 
@@ -27,8 +27,14 @@ export function runComparison(nsamples: number, course: CourseData, racedef: Rac
 	const common = uma1.skills.intersect(uma2.skills).toArray().sort((a,b) => +a - +b);
 	const commonIdx = (id) => { let i = common.indexOf(id); return i > -1 ? i : common.length; };
 	const sort = (a,b) => commonIdx(a) - commonIdx(b) || +a - +b;
-	uma1.skills.toArray().sort(sort).forEach(id => standard.addSkill(id));
-	uma2.skills.toArray().sort(sort).forEach(id => compare.addSkill(id));
+	uma1.skills.toArray().sort(sort).forEach(id => {
+		standard.addSkill(id, Perspective.Self);
+		compare.addSkill(id, Perspective.Other);
+	});
+	uma2.skills.toArray().sort(sort).forEach(id => {
+		compare.addSkill(id, Perspective.Self);
+		standard.addSkill(id, Perspective.Other);
+	});
 	if (!CC_GLOBAL) {
 		standard.withAsiwotameru().withStaminaSyoubu();
 		compare.withAsiwotameru().withStaminaSyoubu();
@@ -37,16 +43,18 @@ export function runComparison(nsamples: number, course: CourseData, racedef: Rac
 		standard.useDefaultPacer(); compare.useDefaultPacer();
 	}
 	const skillPos1 = new Map(), skillPos2 = new Map();
-	function getActivator(skillSet) {
-		return function (s, id) {
+	function getActivator(selfSet, otherSet) {
+		return function (s, id, persp) {
+			const skillSet = persp == Perspective.Self ? selfSet : otherSet;
 			if (id != 'asitame' && id != 'staminasyoubu') {
 				if (!skillSet.has(id)) skillSet.set(id, []);
 				skillSet.get(id).push([s.pos, 0]);
 			}
 		};
 	}
-	function getDeactivator(skillSet) {
-		return function (s, id) {
+	function getDeactivator(selfSet, otherSet) {
+		return function (s, id, persp) {
+			const skillSet = persp == Perspective.Self ? selfSet : otherSet;
 			if (id != 'asitame' && id != 'staminasyoubu') {
 				const ar = skillSet.get(id);  // activation record
 				ar[ar.length-1][1] = s.pos;  // assume the first activation of a skill ends before the second one starts
@@ -54,10 +62,10 @@ export function runComparison(nsamples: number, course: CourseData, racedef: Rac
 			}
 		};
 	}
-	standard.onSkillActivate(getActivator(skillPos1));
-	standard.onSkillDeactivate(getDeactivator(skillPos1));
-	compare.onSkillActivate(getActivator(skillPos2));
-	compare.onSkillDeactivate(getDeactivator(skillPos2));
+	standard.onSkillActivate(getActivator(skillPos1, skillPos2));
+	standard.onSkillDeactivate(getDeactivator(skillPos1, skillPos2));
+	compare.onSkillActivate(getActivator(skillPos2, skillPos1));
+	compare.onSkillDeactivate(getDeactivator(skillPos2, skillPos1));
 	let a = standard.build(), b = compare.build();
 	let ai = 1, bi = 0;
 	let sign = 1;
@@ -79,8 +87,6 @@ export function runComparison(nsamples: number, course: CourseData, racedef: Rac
 			data.hp[ai].push((s2.hp as GameHpPolicy).hp);
 		}
 		data.sdly[ai] = s2.startDelay;
-		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
-		skillPos2.clear();
 
 		while (s1.accumulatetime.t < s2.accumulatetime.t) {
 			s1.step(1/15);
@@ -99,6 +105,9 @@ export function runComparison(nsamples: number, course: CourseData, racedef: Rac
 			data.hp[bi].push((s1.hp as GameHpPolicy).hp);
 		}
 		data.sdly[bi] = s1.startDelay;
+
+		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
+		skillPos2.clear();
 		data.sk[0] = new Map(skillPos1);  // NOT bi (NB. why not?)
 		skillPos1.clear();
 
