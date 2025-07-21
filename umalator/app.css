@@ -345,3 +345,14 @@ body {
 .basinnChartPopover .expandedSkill {
 	width: 345px;
 }
+
+#changelog {
+	font-size: 14px;
+	height: 500px;
+	overflow: auto;
+	width: 80%;
+}
+
+#sourcelinks {
+	font-size: 12px;
+}

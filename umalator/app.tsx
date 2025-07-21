@@ -588,6 +588,148 @@ function App(props) {
 		</Fragment>
 	);
 
+	let resultsPane;
+	if (mode == Mode.Compare && results.length > 0) {
+		resultsPane = (
+			<div id="resultsPaneWrapper">
+				<div id="resultsPane" class="mode-compare">
+					<table id="resultsSummary">
+						<tfoot>
+							<tr>
+								{Object.entries({
+									minrun: ['Minimum', 'Set chart display to the run with minimum bashin difference'],
+									maxrun: ['Maximum', 'Set chart display to the run with maximum bashin difference'],
+									meanrun: ['Mean', 'Set chart display to a run representative of the mean bashin difference'],
+									medianrun: ['Median', 'Set chart display to a run representative of the median bashin difference']
+								}).map(([k,label]) =>
+									<th scope="col" class={displaying == k ? 'selected' : ''} title={label[1]} onClick={() => setChartData(k)}>{label[0]}</th>
+								)}
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr>
+								<td onClick={() => setChartData('minrun')}>{results[0].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+								<td onClick={() => setChartData('maxrun')}>{results[results.length-1].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+								<td onClick={() => setChartData('meanrun')}>{mean.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+								<td onClick={() => setChartData('medianrun')}>{median.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
+							</tr>
+						</tbody>
+					</table>
+					<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">Umamusume 1</strong> is faster, positive numbers mean <strong style="color:#c52a2a">Umamusume 2</strong> is faster.</div>
+					<Histogram width={500} height={333} data={results} />
+				</div>
+				<div id="infoTables">
+					<table>
+						<caption style="color:#2a77c5">Umamusume 1</caption>
+						<tbody>
+							<tr><th>Time to finish</th><td>{chartData.t[0][chartData.t[0].length-1].toFixed(4) + ' s'}</td></tr>
+							<tr><th>Start delay</th><td>{chartData.sdly[0].toFixed(4) + ' s'}</td></tr>
+							<tr><th>Top speed</th><td>{chartData.v[0].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
+						</tbody>
+						{chartData.sk[0].size > 0 &&
+							<tbody>
+								{chartData.sk[0].entries().map(([id,ars]) => ars.flatMap(pos =>
+									<tr>
+										<th>{skillnames[id][0]}</th>
+										<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
+									</tr>)).toArray()}
+							</tbody>}
+					</table>
+					<table>
+						<caption style="color:#c52a2a">Umamusume 2</caption>
+						<tbody>
+							<tr><th>Time to finish</th><td>{chartData.t[1][chartData.t[1].length-1].toFixed(4) + ' s'}</td></tr>
+							<tr><th>Start delay</th><td>{chartData.sdly[1].toFixed(4) + ' s'}</td></tr>
+							<tr><th>Top speed</th><td>{chartData.v[1].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
+						</tbody>
+						{chartData.sk[1].size > 0 &&
+							<tbody>
+								{chartData.sk[1].entries().map(([id,ars]) => ars.flatMap(pos =>
+									<tr>
+										<th>{skillnames[id][0]}</th>
+										<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
+									</tr>)).toArray()}
+							</tbody>}
+					</table>
+				</div>
+			</div>
+		);
+	} else if (mode == Mode.Chart && tableData.size > 0) {
+		resultsPane = (
+			<div id="resultsPaneWrapper">
+				<div id="resultsPane" class="mode-chart">
+					<BasinnChart data={tableData.values().toArray()} hidden={uma1.skills}
+						onSelectionChange={basinnChartSelection}
+						onRunTypeChange={setChartData}
+						onDblClickRow={addSkillFromTable}
+						onInfoClick={showPopover} />
+				</div>
+			</div>
+		);
+	} else if (CC_GLOBAL) {
+		resultsPane = (
+			<div id="resultsPaneWrapper">
+				<div id="resultsPane">
+					<section id="changelog">
+						<h1>Changelog</h1>
+						<section>
+							<h2>2025-07-21</h2>
+							<ul>
+								<li>Implement debuff skills</li>
+								<li>
+									<details>
+										<summary>Fix the implementation of skills with the corner_random condition to be more accurate to mechanics of the global release</summary>
+										Primarily affects Swinging Maestro/Corner Recovery, Professor of Curvature/Corner Adept, and the strategy/distance corner skills
+									</details>
+								</li>
+								<li>Fix an issue where skills weren't displayed on the chart if they were still active at the end of a simulation run</li>
+								<li>Added changelog</li>
+								<li>Minor UI fixes</li>
+							</ul>
+						</section>
+						<section>
+							<h2>2025-07-17</h2>
+							<ul>
+								<li>Run simulations in a background thread for responsiveness</li>
+								<li>
+									<details>
+										<summary>Major improvements to the skill chart mode</summary>
+										<ul>
+											<li>Click rows in the skill efficacy table to show that run on the course chart</li>
+											<li>Radio buttons in table headers to select the statistic displayed on the course chart</li>
+											<li>Show a popup with skill information and length histogram when clicking icons in the skill efficacy table</li>
+											<li>Double-click rows on the skill efficacy table to add them to the simulated uma musume</li>
+										</ul>
+									</details>
+								</li>
+								<li>Changes to the skill chart mode to feel more responsive</li>
+							</ul>
+						</section>
+						<section>
+							<h2>2025-07-16</h2>
+							<ul>
+								<li>Initial implementation of the skill chart mode</li>
+							</ul>
+						</section>
+						<section>
+							<h2>2025-07-13</h2>
+							<ul>
+								<li>Initial release of the global version</li>
+								<li>Miscellaneous UI improvements</li>
+								<li>Bug fixes</li>
+							</ul>
+						</section>
+					</section>
+					<footer id="sourcelinks">
+						Source code: <a href="https://github.com/alpha123/uma-skill-tools">simulator</a>, <a href="https://github.com/alpha123/uma-tools">UI</a>
+					</footer>
+				</div>
+			</div>
+		);
+	} else {
+		resultsPane = null;
+	}
+
 	return (
 		<Language.Provider value={props.lang}>
 			<IntlProvider definition={strings}>
@@ -640,77 +782,7 @@ function App(props) {
 						<SeasonSelect value={racedef.season} set={racesetter('season')} />
 					</div>
 				</div>
-				{mode == Mode.Compare && results.length > 0 &&
-					<div id="resultsPaneWrapper">
-						<div id="resultsPane" class="mode-compare">
-							<table id="resultsSummary">
-								<tfoot>
-									<tr>
-										{Object.entries({
-											minrun: ['Minimum', 'Set chart display to the run with minimum bashin difference'],
-											maxrun: ['Maximum', 'Set chart display to the run with maximum bashin difference'],
-											meanrun: ['Mean', 'Set chart display to a run representative of the mean bashin difference'],
-											medianrun: ['Median', 'Set chart display to a run representative of the median bashin difference']
-										}).map(([k,label]) =>
-											<th scope="col" class={displaying == k ? 'selected' : ''} title={label[1]} onClick={() => setChartData(k)}>{label[0]}</th>
-										)}
-									</tr>
-								</tfoot>
-								<tbody>
-									<tr>
-										<td onClick={() => setChartData('minrun')}>{results[0].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
-										<td onClick={() => setChartData('maxrun')}>{results[results.length-1].toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
-										<td onClick={() => setChartData('meanrun')}>{mean.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
-										<td onClick={() => setChartData('medianrun')}>{median.toFixed(2)}<span class="unit-basinn">{CC_GLOBAL?'lengths':'バ身'}</span></td>
-									</tr>
-								</tbody>
-							</table>
-							<div id="resultsHelp">Negative numbers mean <strong style="color:#2a77c5">Umamusume 1</strong> is faster, positive numbers mean <strong style="color:#c52a2a">Umamusume 2</strong> is faster.</div>
-							<Histogram width={500} height={333} data={results} />
-						</div>
-						<div id="infoTables">
-							<table>
-								<caption style="color:#2a77c5">Umamusume 1</caption>
-								<tbody>
-									<tr><th>Time to finish</th><td>{chartData.t[0][chartData.t[0].length-1].toFixed(4) + ' s'}</td></tr>
-									<tr><th>Start delay</th><td>{chartData.sdly[0].toFixed(4) + ' s'}</td></tr>
-									<tr><th>Top speed</th><td>{chartData.v[0].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
-								</tbody>
-								{chartData.sk[0].size > 0 &&
-									<tbody>
-										{chartData.sk[0].entries().map(([id,ars]) => ars.flatMap(pos =>
-											<tr>
-												<th>{skillnames[id][0]}</th>
-												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
-											</tr>)).toArray()}
-									</tbody>}
-							</table>
-							<table>
-								<caption style="color:#c52a2a">Umamusume 2</caption>
-								<tbody>
-									<tr><th>Time to finish</th><td>{chartData.t[1][chartData.t[1].length-1].toFixed(4) + ' s'}</td></tr>
-									<tr><th>Start delay</th><td>{chartData.sdly[1].toFixed(4) + ' s'}</td></tr>
-									<tr><th>Top speed</th><td>{chartData.v[1].reduce((a,b) => Math.max(a,b), 0).toFixed(2) + ' m/s'}</td></tr>
-								</tbody>
-								{chartData.sk[1].size > 0 &&
-									<tbody>
-										{chartData.sk[1].entries().map(([id,ars]) => ars.flatMap(pos =>
-											<tr>
-												<th>{skillnames[id][0]}</th>
-												<td>{`${pos[0].toFixed(2)} m – ${pos[1].toFixed(2)} m`}</td>
-											</tr>)).toArray()}
-									</tbody>}
-							</table>
-						</div>
-					</div>
-				}
-				{mode == Mode.Chart && tableData.size > 0 &&
-					<div id="resultsPaneWrapper">
-						<div id="resultsPane" class="mode-chart">
-							<BasinnChart data={tableData.values().toArray()} hidden={uma1.skills} onSelectionChange={basinnChartSelection} onRunTypeChange={setChartData} onDblClickRow={addSkillFromTable} onInfoClick={showPopover} />
-						</div>
-					</div>
-				}
+				{resultsPane}
 				{expanded && <div id="umaPane" />}
 				<div id={expanded ? 'umaOverlay' : 'umaPane'}>
 					<div class={!expanded && currentIdx == 0 ? 'selected' : ''}>
