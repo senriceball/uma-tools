@@ -81,7 +81,7 @@ reproduce: https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPz2rDMA
 ** TODO seirios ≤4 popularity version is unselectable
 ** TODO annoying issue where sometimes it shows no skills as having activated
 even though I think they probably did? unsure, needs to be investigated
-** TODO skills don't show on the chart if they're still active when the simulation ends
+** DONE skills don't show on the chart if they're still active when the simulation ends
 the deactivate hook is never called
 ** TODO all_corner_random bugged and sometimes seems to activate twice?
 reproduce: https://alpha123.github.io/uma-tools/umalator/#H4sIAAAAAAAACtWPwU7EMAxE%2F8XnHNJ2F0Fve0RckPaIOFitW6Jt4ihxVKHV%2FjtOACH4A262k3kzc4WJS8r0OMPY2Qd7ZyBk9HGjDOPRWgMl0zPnJ6IIo6RCBhJONNMC4xU8swp7A2viEirDwE4ob5TanAkzhzaK8%2FT1FWeqbvamdI9dBXGRxUlNAaCySFRh90cNkAW9C6hrX%2FNE3hu8hVuL5O%2BH3eWZvW6DbaqEQuu7As8ULlwUOztlhYlOUZyUGgLO1a2kBX9dT%2FAD%2BHu%2BuG1TzxdQ08PQwetni%2F7%2FthgOtcXtAwchUkMLAgAA

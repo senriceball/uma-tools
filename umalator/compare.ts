@@ -106,6 +106,9 @@ export function runComparison(nsamples: number, course: CourseData, racedef: Rac
 		}
 		data.sdly[bi] = s1.startDelay;
 
+		s2.cleanup();
+		s1.cleanup();
+
 		data.sk[1] = new Map(skillPos2);  // NOT ai (NB. why not?)
 		skillPos2.clear();
 		data.sk[0] = new Map(skillPos1);  // NOT bi (NB. why not?)
