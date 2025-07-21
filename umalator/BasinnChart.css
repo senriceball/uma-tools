@@ -22,7 +22,6 @@
 
 .basinnChart th {
 	background: linear-gradient(#fff,#e4e0e9);
-	cursor: pointer;
 	text-align: left;
 	width: 15%;
 }
@@ -40,6 +39,7 @@
 }
 
 .basinnChart .columnHeader span {
+	cursor: pointer;
 	position: relative;
 }
 
