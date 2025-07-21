@@ -349,8 +349,8 @@ body {
 #changelog {
 	font-size: 14px;
 	height: 500px;
+	margin-left: 80px;
 	overflow: auto;
-	width: 80%;
 }
 
 #sourcelinks {
