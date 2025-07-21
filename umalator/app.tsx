@@ -602,10 +602,14 @@ function App(props) {
 					<div id="runPane">
 						<fieldset>
 							<legend>Mode:</legend>
-							<input type="radio" id="mode-compare" name="mode" value="compare" checked={mode == Mode.Compare} onClick={() => updateUiState(UiStateMsg.SetModeCompare)} />
-							<label for="mode-compare">Compare</label>
-							<input type="radio" id="mode-chart" name="mode" value="chart" checked={mode == Mode.Chart} onClick={() => updateUiState(UiStateMsg.SetModeChart)} />
-							<label for="mode-chart">Skill chart</label>
+							<div>
+								<input type="radio" id="mode-compare" name="mode" value="compare" checked={mode == Mode.Compare} onClick={() => updateUiState(UiStateMsg.SetModeCompare)} />
+								<label for="mode-compare">Compare</label>
+							</div>
+							<div>
+								<input type="radio" id="mode-chart" name="mode" value="chart" checked={mode == Mode.Chart} onClick={() => updateUiState(UiStateMsg.SetModeChart)} />
+								<label for="mode-chart">Skill chart</label>
+							</div>
 						</fieldset>
 						<label for="nsamples">Samples:</label>
 						<input type="number" id="nsamples" min="1" max="10000" value={nsamples} onInput={(e) => setSamples(+e.currentTarget.value)} />
