@@ -675,6 +675,7 @@ function App(props) {
 						<section>
 							<h2>2025-07-21</h2>
 							<ul>
+								<li>Update game data</li>
 								<li>Implement debuff skills</li>
 								<li>
 									<details>
