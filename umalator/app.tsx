@@ -454,17 +454,32 @@ function App(props) {
 		updateUiState(UiStateMsg.ToggleExpand);
 	}
 
+	const [progress, setProgress] = useState(0);
+	const [isRunning, setIsRunning] = useState(false);
+	const [currentMode, setCurrentMode] = useState<'compare' | 'chart' | null>(null);
+
 	const [worker1, worker2] = [1,2].map(_ => useMemo(() => {
 		const w = new Worker('./simulator.worker.js');
 		w.addEventListener('message', function (e) {
-			const {type, results} = e.data;
+			const {type} = e.data;
 			switch (type) {
-				case 'compare':
+				case 'compare': {
+					const {results} = e.data;
 					setResults(results);
 					break;
-				case 'chart':
+				}
+				case 'chart': {
+					const {results} = e.data;
 					updateTableData(results);
 					break;
+				}
+				case 'progress': {
+					const {mode, value} = e.data;
+					setCurrentMode(mode);
+					setIsRunning(value < 1);
+					setProgress(value);
+					break;
+				}
 			}
 		});
 		return w;
@@ -519,6 +534,7 @@ function App(props) {
 
 	function doComparison() {
 		postEvent('doComparison', {});
+		setProgress(0); setIsRunning(true); setCurrentMode('compare');
 		worker1.postMessage({
 			msg: 'compare',
 			data: {
@@ -543,6 +559,7 @@ function App(props) {
 		const skills2 = skills.slice(Math.floor(skills.length/2));
 		updateTableData('reset');
 		updateTableData(filler);
+		setProgress(0); setIsRunning(true); setCurrentMode('chart');
 		worker1.postMessage({msg: 'chart', data: {skills: skills1, course, racedef: params, uma, options: {seed, usePosKeep}}});
 		worker2.postMessage({msg: 'chart', data: {skills: skills2, course, racedef: params, uma, options: {seed, usePosKeep}}});
 	}
@@ -738,8 +755,20 @@ function App(props) {
 						</div>
 						{
 							mode == Mode.Compare
-							? <button id="run" onClick={doComparison} tabindex={1}>COMPARE</button>
-							: <button id="run" onClick={doBasinnChart} tabindex={1}>RUN</button>
+							? <button id="run" onClick={doComparison} tabindex={1} disabled={isRunning && currentMode==='compare'}>
+								{isRunning && currentMode==='compare' ? `Running… ${(progress*100).toFixed(0)}%` : 'COMPARE'}
+							  </button>
+							: <button id="run" onClick={doBasinnChart} tabindex={1} disabled={isRunning && currentMode==='chart'}>
+								{isRunning && currentMode==='chart' ? `Running… ${(progress*100).toFixed(0)}%` : 'RUN'}
+							  </button>
+						}
+						{isRunning &&
+							<div id="progressBar" style="display:flex;align-items:center;gap:8px;min-width:200px">
+								<div style="position:relative;height:8px;width:160px;background:#ddd;border-radius:4px;overflow:hidden">
+									<div style={`height:100%;width:${Math.max(0, Math.min(100, Math.round(progress*100)))}%;background:#2a77c5;transition:width .2s`}></div>
+								</div>
+								<span style="font-size:12px">{Math.round(progress*100)}%</span>
+							</div>
 						}
 						<a href="#" onClick={copyStateUrl}>Copy link</a>
 							<RacePresets set={(courseId, racedef) => { setCourseId(courseId); setRaceDef(racedef); }} />

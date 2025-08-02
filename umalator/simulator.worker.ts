@@ -33,10 +33,10 @@ function mergeResultSets(data1, data2) {
 	});
 }
 
-function run1Round(nsamples: number, skills: string[], course: CourseData, racedef: RaceParameters, uma, options) {
-	const data = new Map();
+function run1Round(nsamples: number, skills: string[], course: CourseData, racedef: RaceParameters, uma: HorseState, options) {
+	const data = new Map<string, any>();
 	skills.forEach(id => {
-		const withSkill = uma.set('skills', uma.skills.add(id));
+		const withSkill = (uma as HorseState).set('skills', (uma as any).skills.add(id)) as HorseState;
 		const {results, runData} = runComparison(nsamples, course, racedef, uma, withSkill, options);
 		const mid = Math.floor(results.length / 2);
 		const median = results.length % 2 == 0 ? (results[mid-1] + results[mid]) / 2 : results[mid];
@@ -53,32 +53,62 @@ function run1Round(nsamples: number, skills: string[], course: CourseData, raced
 }
 
 function runChart({skills, course, racedef, uma, options}) {
-	const uma_ = new HorseState(uma).set('skills', SkillSet(uma.skills));
+	// HorseState is an Immutable.Record subclass. Construct from plain and use set() from Record API.
+	const uma_ = new HorseState(uma) as HorseState;
+	// progress tracking
+	let done = 0;
+	let total = 0;
+	// phase 1 planned total
+	total += 5 * skills.length;
+
 	let results = run1Round(5, skills, course, racedef, uma_, options);
 	postMessage({type: 'chart', results});
+	done += 5 * skills.length;
+	postMessage({type: 'progress', mode: 'chart', value: total > 0 ? done / total : 0});
+
+	// filter and plan next phase
 	skills = skills.filter(id => results.get(id).max > 0.1);
+	total += 20 * skills.length;
+
 	let update = run1Round(20, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
 	postMessage({type: 'chart', results});
+	done += 20 * skills.length;
+	postMessage({type: 'progress', mode: 'chart', value: total > 0 ? done / total : 0});
+
+	// next filter and plan
 	skills = skills.filter(id => Math.abs(results.get(id).max - results.get(id).min) > 0.1);
+	total += 50 * skills.length;
+
 	update = run1Round(50, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
 	postMessage({type: 'chart', results});
+	done += 50 * skills.length;
+	postMessage({type: 'progress', mode: 'chart', value: total > 0 ? done / total : 0});
+
+	// final phase plan
+	total += 200 * skills.length;
+
 	update = run1Round(200, skills, course, racedef, uma_, options);
 	mergeResultSets(results, update);
 	postMessage({type: 'chart', results});
+	done += 200 * skills.length;
+	postMessage({type: 'progress', mode: 'chart', value: total > 0 ? Math.min(1, done / total) : 1});
 }
 
 function runCompare({nsamples, course, racedef, uma1, uma2, options}) {
-	const uma1_ = new HorseState(uma1).set('skills', SkillSet(uma1.skills));
-	const uma2_ = new HorseState(uma2).set('skills', SkillSet(uma2.skills));
+	const uma1_ = uma1 && typeof (uma1 as any).set === 'function' ? uma1 : new (HorseState as any)(uma1);
+	const uma2_ = uma2 && typeof (uma2 as any).set === 'function' ? uma2 : new (HorseState as any)(uma2);
 	let results;
+	postMessage({type: 'progress', mode: 'compare', value: 0});
 	for (let n = Math.min(20, nsamples), mul = 6; n < nsamples; n = Math.min(n * mul, nsamples), mul = Math.max(mul - 1, 2)) {
 		results = runComparison(n, course, racedef, uma1_, uma2_, options);
 		postMessage({type: 'compare', results});
+		postMessage({type: 'progress', mode: 'compare', value: Math.max(0, Math.min(1, n / nsamples))});
 	}
 	results = runComparison(nsamples, course, racedef, uma1_, uma2_, options);
 	postMessage({type: 'compare', results});
+	postMessage({type: 'progress', mode: 'compare', value: 1});
 }
 
 self.addEventListener('message', function (e) {
