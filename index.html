@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>uma-tools</title>
+  <meta http-equiv="refresh" content="0; url=./umalator/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    // Fallback JS redirect if meta refresh is blocked
+    (function () {
+      var target = location.pathname.replace(/\/+$/, '') + '/umalator/';
+      // If already on /umalator/ do nothing
+      if (!/\/umalator\/?$/.test(location.pathname)) {
+        location.replace(target);
+      }
+    })();
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=/umalator/">
+  </noscript>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji"; margin: 2rem; }
+    .msg { max-width: 640px; }
+    a { color: #2a77c5; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="msg">
+    <h1>Redirecting…</h1>
+    <p>If you are not redirected automatically, follow this link:</p>
+    <p><a href="./umalator/">Open umalator</a></p>
+  </div>
+</body>
+</html>
